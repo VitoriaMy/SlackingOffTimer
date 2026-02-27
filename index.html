@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SlackingOffTimer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section id="onboarding" class="card hidden">
+        <h1>首次设置</h1>
+        <p class="muted">只需一次设置，后续按规则自动统计。</p>
+        <form id="schedule-form" class="form">
+          <label>
+            工作日
+            <div class="weekday-group" id="workday-group"></div>
+          </label>
+          <label>
+            上班时间
+            <input type="time" name="startTime" required />
+          </label>
+          <label>
+            下班时间
+            <input type="time" name="endTime" required />
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" name="enableRest" />
+            启用休息时段（可选）
+          </label>
+          <div class="rest-fields">
+            <label>
+              休息开始
+              <input type="time" name="restStart" />
+            </label>
+            <label>
+              休息结束
+              <input type="time" name="restEnd" />
+            </label>
+          </div>
+          <p id="form-error" class="error hidden"></p>
+          <button type="submit">保存并开始</button>
+        </form>
+      </section>
+
+      <section id="dashboard" class="card hidden">
+        <header class="dashboard-header">
+          <h1>今日总览</h1>
+          <nav class="actions">
+            <a href="./trends.html">最近7天趋势</a>
+            <a href="./settings.html">修改工作制度</a>
+          </nav>
+        </header>
+
+        <div class="metrics">
+          <div class="metric">
+            <span class="label">今日摸鱼时长</span>
+            <span id="fish-minutes" class="value">0分钟</span>
+          </div>
+          <div class="metric">
+            <span class="label">今日摸鱼占比</span>
+            <span id="fish-ratio" class="value">0%</span>
+          </div>
+          <div class="metric">
+            <span class="label">当前状态</span>
+            <span id="status" class="value">待机</span>
+          </div>
+        </div>
+
+        <section class="quick-actions" aria-label="快捷操作">
+          <a class="primary-action" href="./settings.html">修改工作制度</a>
+          <a class="secondary-action" href="./trends.html">查看最近7天趋势</a>
+        </section>
+
+        <p class="hint">已生效，可返回桌面，系统将按规则记录会话（Web近似）。</p>
+      </section>
+    </main>
+    <script type="module" src="./js/index.js"></script>
+  </body>
+</html>

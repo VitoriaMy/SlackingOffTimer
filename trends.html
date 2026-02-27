@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>最近7天趋势 - SlackingOffTimer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <header class="dashboard-header">
+          <h1>最近7天趋势</h1>
+          <nav class="actions">
+            <a href="./index.html">返回首页</a>
+            <a href="./settings.html">修改工作制度</a>
+          </nav>
+        </header>
+
+        <div class="summary-row">
+          <div class="metric compact">
+            <span class="label">7天总摸鱼时长</span>
+            <span id="weekly-total" class="value">0分钟</span>
+          </div>
+          <div class="metric compact">
+            <span class="label">7天日均摸鱼时长</span>
+            <span id="weekly-average" class="value">0分钟</span>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>摸鱼时长</th>
+              <th>摸鱼占比</th>
+            </tr>
+          </thead>
+          <tbody id="trend-body"></tbody>
+        </table>
+      </section>
+    </main>
+    <script type="module" src="./js/trends.js"></script>
+  </body>
+</html>

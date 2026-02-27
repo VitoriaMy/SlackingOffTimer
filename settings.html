@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>修改工作制度 - SlackingOffTimer</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <section class="card">
+        <header class="dashboard-header">
+          <h1>修改工作制度</h1>
+          <nav class="actions">
+            <a href="./index.html">返回首页</a>
+            <a href="./trends.html">最近7天趋势</a>
+          </nav>
+        </header>
+        <form id="settings-form" class="form">
+          <label>
+            工作日
+            <div class="weekday-group" id="workday-group"></div>
+          </label>
+          <label>
+            上班时间
+            <input type="time" name="startTime" required />
+          </label>
+          <label>
+            下班时间
+            <input type="time" name="endTime" required />
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" name="enableRest" />
+            启用休息时段（可选）
+          </label>
+          <div class="rest-fields">
+            <label>
+              休息开始
+              <input type="time" name="restStart" />
+            </label>
+            <label>
+              休息结束
+              <input type="time" name="restEnd" />
+            </label>
+          </div>
+          <section class="push-card" aria-label="推送设置">
+            <div>
+              <span class="label">推送：摸鱼小计</span>
+              <p id="push-status" class="muted inline-note">未开启</p>
+            </div>
+            <button id="push-toggle" type="button" class="secondary-btn">开启推送</button>
+          </section>
+          <p id="form-error" class="error hidden"></p>
+          <button type="submit">保存设置</button>
+        </form>
+      </section>
+    </main>
+    <script type="module" src="./js/settings.js"></script>
+  </body>
+</html>
