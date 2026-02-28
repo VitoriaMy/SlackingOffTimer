@@ -40,12 +40,18 @@ export function App() {
   const location = useLocation();
   const [ready, setReady] = useState(false);
   const [language, setLanguage] = useState<AppLanguage>("zh");
+  const [languageDraft, setLanguageDraft] = useState<AppLanguage>("zh");
   const [configured, setConfigured] = useState(false);
   const [schedule, setSchedule] = useState<WorkSchedule>(defaultSchedule);
   const [stats, setStats] = useState<DailyStat[]>([]);
   const [sessionStatus, setSessionStatus] = useState<0 | 1>(0);
   const [sessionStartAt, setSessionStartAt] = useState<number | null>(null);
+  const [sessionNow, setSessionNow] = useState(() => Date.now());
+  const [isWorkTimeDirty, setIsWorkTimeDirty] = useState(false);
+  const [isWorkDaysDirty, setIsWorkDaysDirty] = useState(false);
   const activeSegmentRef = useRef<string | null>(null);
+  const workTimeSaveRef = useRef<(() => void) | null>(null);
+  const workDaysSaveRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const savedSchedule = normalizeSchedule(loadSchedule());
@@ -69,6 +75,16 @@ export function App() {
     setReady(true);
   }, []);
 
+  useEffect(() => {
+    if (!ready) return;
+    saveSessionState({
+      status: sessionStatus,
+      startAt: sessionStartAt,
+      endAt: sessionStatus === 1 ? null : Date.now(),
+      segmentId: sessionStatus === 1 ? activeSegmentRef.current : null
+    });
+  }, [ready, sessionStartAt, sessionStatus]);
+
   const text = TEXT[language];
 
   useEffect(() => {
@@ -85,6 +101,9 @@ export function App() {
 
   const canTrackNow = isWorkWindow(new Date(), schedule);
   const isTracking = sessionStatus === 1 && sessionStartAt !== null;
+  const liveSessionMinutes =
+    isTracking && sessionStartAt !== null ? Math.max(1, Math.round((sessionNow - sessionStartAt) / 60000)) : 0;
+  const displayFishMinutes = todayStat.fishMinutes + liveSessionMinutes;
 
   const commitSession = useCallback(
     (startAt: number, endAt: number) => {
@@ -161,6 +180,26 @@ export function App() {
   }, [handleStatusUpdate, schedule, sessionStatus]);
 
   useEffect(() => {
+    if (!isTracking) return;
+    const initialNow = Date.now();
+    setSessionNow(initialNow);
+    if (!isWorkWindow(new Date(initialNow), schedule)) {
+      handleStatusUpdate(0);
+      return;
+    }
+
+    const ticker = window.setInterval(() => {
+      const now = Date.now();
+      if (!isWorkWindow(new Date(now), schedule)) {
+        handleStatusUpdate(0);
+        return;
+      }
+      setSessionNow(now);
+    }, 1000);
+    return () => window.clearInterval(ticker);
+  }, [handleStatusUpdate, isTracking, schedule]);
+
+  useEffect(() => {
     if (sessionStatus !== 1) return;
     const segmentId = getWorkSegmentId(new Date(), schedule);
     if (!segmentId || segmentId !== activeSegmentRef.current) {
@@ -168,14 +207,17 @@ export function App() {
     }
   }, [handleStatusUpdate, schedule, sessionStatus]);
 
-  const handleSaveSchedule = (next: WorkSchedule, redirectTo: string = "/settings") => {
+  const navigateToSettingsAfterSave = () => {
+    navigate("/settings");
+  };
+
+  const handleSaveSchedule = (next: WorkSchedule) => {
     const normalized = normalizeSchedule(next);
     saveSchedule(normalized);
     saveConfigured(true);
     setSchedule(normalized);
     setConfigured(true);
-    window.alert(text.alertSaved);
-    navigate(redirectTo);
+    navigateToSettingsAfterSave();
   };
 
   const handleSaveScheduleSilently = (next: WorkSchedule) => {
@@ -188,14 +230,25 @@ export function App() {
 
   const handleLanguageSave = (next: AppLanguage) => {
     setLanguage(next);
+    setLanguageDraft(next);
     saveLanguage(next);
-    navigate("/settings");
+    navigateToSettingsAfterSave();
   };
 
   const isHomePage = location.pathname === "/";
   const isSettingsPage = location.pathname.startsWith("/settings");
+  const isLanguageSettingsPage = location.pathname === "/settings/language";
+  const isWorkTimeSettingsPage = location.pathname === "/settings/work-time";
+  const isWorkDaysSettingsPage = location.pathname === "/settings/work-days";
   const primaryPagePaths = new Set(["/", "/trends", "/settings"]);
+  const isPrimaryPage = primaryPagePaths.has(location.pathname);
   const showBackButton = !primaryPagePaths.has(location.pathname);
+
+  useEffect(() => {
+    if (isLanguageSettingsPage) {
+      setLanguageDraft(language);
+    }
+  }, [isLanguageSettingsPage, language]);
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
@@ -222,7 +275,7 @@ export function App() {
                 : text.appTitle;
 
   const statusText = !canTrackNow ? text.offWork : isTracking ? text.tracking : text.standby;
-  const ratio = computeRatio(todayStat.fishMinutes, effectiveWorkMinutes);
+  const ratio = computeRatio(displayFishMinutes, effectiveWorkMinutes);
 
   if (!ready) {
     return <main className="container">{text.loading}</main>;
@@ -240,7 +293,25 @@ export function App() {
             <span className="header-side-placeholder" aria-hidden="true" />
           )}
           <h1>{headerTitle}</h1>
-          <span className="header-side-placeholder" aria-hidden="true" />
+          {isLanguageSettingsPage && languageDraft !== language ? (
+            <button
+              type="button"
+              className="header-action"
+              onClick={() => handleLanguageSave(languageDraft)}
+            >
+              {text.save}
+            </button>
+          ) : isWorkTimeSettingsPage && isWorkTimeDirty && workTimeSaveRef.current ? (
+            <button type="button" className="header-action" onClick={() => workTimeSaveRef.current?.()}>
+              {text.save}
+            </button>
+          ) : isWorkDaysSettingsPage && isWorkDaysDirty && workDaysSaveRef.current ? (
+            <button type="button" className="header-action" onClick={() => workDaysSaveRef.current?.()}>
+              {text.save}
+            </button>
+          ) : (
+            <span className="header-side-placeholder" aria-hidden="true" />
+          )}
         </div>
       </header>
 
@@ -259,7 +330,7 @@ export function App() {
                   startLabel={text.startSession}
                   stopLabel={text.stopSession}
                   offWorkHint={text.notWorkHint}
-                  fishMinutes={todayStat.fishMinutes}
+                  fishMinutes={displayFishMinutes}
                   ratio={ratio}
                   statusText={statusText}
                   isTracking={isTracking}
@@ -275,7 +346,13 @@ export function App() {
           <Route path="/settings" element={<SettingsHubPage text={text} isFirstSetup={!configured} />} />
           <Route
             path="/settings/language"
-            element={<LanguageSettingsPage text={text} language={language} onSaveLanguage={handleLanguageSave} />}
+            element={
+              <LanguageSettingsPage
+                text={text}
+                language={language}
+                onDraftLanguageChange={setLanguageDraft}
+              />
+            }
           />
           <Route
             path="/settings/work-time"
@@ -284,7 +361,11 @@ export function App() {
                 text={text}
                 language={language}
                 schedule={schedule}
-                onSaveSchedule={(next) => handleSaveSchedule(next, configured ? "/settings" : "/")}
+                onSaveSchedule={handleSaveSchedule}
+                onDirtyChange={setIsWorkTimeDirty}
+                onRegisterSave={(handler) => {
+                  workTimeSaveRef.current = handler;
+                }}
               />
             }
           />
@@ -295,7 +376,11 @@ export function App() {
                 text={text}
                 language={language}
                 schedule={schedule}
-                onSaveSchedule={(next) => handleSaveSchedule(next, configured ? "/settings" : "/")}
+                onSaveSchedule={handleSaveSchedule}
+                onDirtyChange={setIsWorkDaysDirty}
+                onRegisterSave={(handler) => {
+                  workDaysSaveRef.current = handler;
+                }}
               />
             }
           />
@@ -332,38 +417,40 @@ export function App() {
         </Routes>
       </section>
 
-      <nav className="bottom-nav" aria-label="主菜单">
-        <NavLink to="/" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-          {({ isActive }) => (
-            <>
-              <span className="tab-icon" aria-hidden="true">
-                {isActive ? <AiFillHome /> : <AiOutlineHome />}
-              </span>
-              <span>{text.home}</span>
-            </>
-          )}
-        </NavLink>
-        <NavLink to="/trends" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-          {({ isActive }) => (
-            <>
-              <span className="tab-icon" aria-hidden="true">
-                {isActive ? <AiOutlineFund /> : <AiOutlineLineChart />}
-              </span>
-              <span>{text.trends}</span>
-            </>
-          )}
-        </NavLink>
-        <NavLink to="/settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-          {({ isActive }) => (
-            <>
-              <span className="tab-icon" aria-hidden="true">
-                {isActive ? <AiFillSetting /> : <AiOutlineSetting />}
-              </span>
-              <span>{text.settings}</span>
-            </>
-          )}
-        </NavLink>
-      </nav>
+      {isPrimaryPage && (
+        <nav className="bottom-nav" aria-label="主菜单">
+          <NavLink to="/" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+            {({ isActive }) => (
+              <>
+                <span className="tab-icon" aria-hidden="true">
+                  {isActive ? <AiFillHome /> : <AiOutlineHome />}
+                </span>
+                <span>{text.home}</span>
+              </>
+            )}
+          </NavLink>
+          <NavLink to="/trends" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+            {({ isActive }) => (
+              <>
+                <span className="tab-icon" aria-hidden="true">
+                  {isActive ? <AiOutlineFund /> : <AiOutlineLineChart />}
+                </span>
+                <span>{text.trends}</span>
+              </>
+            )}
+          </NavLink>
+          <NavLink to="/settings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+            {({ isActive }) => (
+              <>
+                <span className="tab-icon" aria-hidden="true">
+                  {isActive ? <AiFillSetting /> : <AiOutlineSetting />}
+                </span>
+                <span>{text.settings}</span>
+              </>
+            )}
+          </NavLink>
+        </nav>
+      )}
     </main>
   );
 }

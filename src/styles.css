@@ -68,6 +68,19 @@ a {
   height: 32px;
 }
 
+.header-action {
+  border: none;
+  background: transparent;
+  color: #07c160;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 0;
+  text-align: right;
+}
+
 .card {
   background: #fff;
   border-radius: 12px;
@@ -228,6 +241,29 @@ a {
 
 .wechat-field-row:last-child {
   border-bottom: none;
+}
+
+.language-option {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  padding: 0 12px;
+  justify-content: space-between;
+}
+
+.language-option.active {
+  font-weight: 600;
+}
+
+.language-option-indicator {
+  min-width: 14px;
+  text-align: right;
+}
+
+.language-option.active .language-option-indicator {
+  color: #07c160;
 }
 
 .wechat-field-row span {

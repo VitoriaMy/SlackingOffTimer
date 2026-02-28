@@ -8,15 +8,41 @@ type WorkTimeSettingsPageProps = {
   language: AppLanguage;
   schedule: WorkSchedule;
   onSaveSchedule: (schedule: WorkSchedule) => void;
+  onDirtyChange: (dirty: boolean) => void;
+  onRegisterSave: (handler: (() => void) | null) => void;
 };
 
-export function WorkTimeSettingsPage({ text, language, schedule, onSaveSchedule }: WorkTimeSettingsPageProps) {
+export function WorkTimeSettingsPage({
+  text,
+  language,
+  schedule,
+  onSaveSchedule,
+  onDirtyChange,
+  onRegisterSave
+}: WorkTimeSettingsPageProps) {
   const [draft, setDraft] = useState<WorkSchedule>(normalizeSchedule(schedule));
   const [error, setError] = useState("");
 
   useEffect(() => {
     setDraft(normalizeSchedule(schedule));
+    setError("");
   }, [schedule]);
+
+  useEffect(() => {
+    const current = JSON.stringify({
+      startTime: draft.startTime,
+      endTime: draft.endTime,
+      lunchStart: draft.lunchStart ?? "",
+      lunchEnd: draft.lunchEnd ?? ""
+    });
+    const original = JSON.stringify({
+      startTime: schedule.startTime,
+      endTime: schedule.endTime,
+      lunchStart: schedule.lunchStart ?? "",
+      lunchEnd: schedule.lunchEnd ?? ""
+    });
+    onDirtyChange(current !== original);
+  }, [draft.endTime, draft.lunchEnd, draft.lunchStart, draft.startTime, onDirtyChange, schedule.endTime, schedule.lunchEnd, schedule.lunchStart, schedule.startTime]);
 
   const handleSave = () => {
     const message = validateSchedule(draft, language);
@@ -27,6 +53,11 @@ export function WorkTimeSettingsPage({ text, language, schedule, onSaveSchedule 
     setError("");
     onSaveSchedule({ ...draft, lunchStart: draft.lunchStart || undefined, lunchEnd: draft.lunchEnd || undefined });
   };
+
+  useEffect(() => {
+    onRegisterSave(handleSave);
+    return () => onRegisterSave(null);
+  }, [onRegisterSave, handleSave]);
 
   return (
     <section className="settings-root">
@@ -58,9 +89,6 @@ export function WorkTimeSettingsPage({ text, language, schedule, onSaveSchedule 
         </label>
       </div>
       {error && <p className="error">{error}</p>}
-      <div className="actions settings-actions">
-        <button onClick={handleSave}>{text.save}</button>
-      </div>
     </section>
   );
 }

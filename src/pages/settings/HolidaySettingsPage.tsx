@@ -70,16 +70,15 @@ export function HolidaySettingsPage({ text, schedule, onSaveSchedule }: HolidayS
     const currentStatus = dayOverrides[key] ?? defaultStatus;
     const nextStatus: "work" | "rest" = currentStatus === "work" ? "rest" : "work";
 
-    setDayOverrides((prev) => {
-      const next = { ...prev };
-      if (nextStatus === defaultStatus) {
-        delete next[key];
-      } else {
-        next[key] = nextStatus;
-      }
-      persistOverrides(next);
-      return next;
-    });
+    const nextOverrides = { ...dayOverrides };
+    if (nextStatus === defaultStatus) {
+      delete nextOverrides[key];
+    } else {
+      nextOverrides[key] = nextStatus;
+    }
+
+    setDayOverrides(nextOverrides);
+    persistOverrides(nextOverrides);
   };
 
   const currentYear = cursorMonth.getFullYear();

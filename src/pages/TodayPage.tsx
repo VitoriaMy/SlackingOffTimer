@@ -55,11 +55,8 @@ export function TodayPage({
       </div>
 
       <div className="actions">
-        <button onClick={onStart} disabled={!canTrackNow || isTracking}>
-          {startLabel}
-        </button>
-        <button className="secondary" onClick={onStop} disabled={!isTracking}>
-          {stopLabel}
+        <button onClick={isTracking ? onStop : onStart} disabled={!isTracking && !canTrackNow}>
+          {isTracking ? stopLabel : startLabel}
         </button>
       </div>
 
