@@ -1,5 +1,6 @@
 import { formatMinutes } from "../../lib/time";
 import { AppLanguage } from "../../lib/types";
+import { HourglassSvg } from "../components/HourglassSvg";
 
 type TodayPageProps = {
   language: AppLanguage;
@@ -61,6 +62,10 @@ export function TodayPage({
       </div>
 
       {!canTrackNow && <p className="hint">{offWorkHint}</p>}
+
+      <div className="today-hourglass">
+        <HourglassSvg percent={ratio} width={160} height={220} className="today-hourglass-svg" />
+      </div>
     </section>
   );
 }

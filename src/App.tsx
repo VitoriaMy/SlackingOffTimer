@@ -50,6 +50,7 @@ export function App() {
   const [isWorkTimeDirty, setIsWorkTimeDirty] = useState(false);
   const [isWorkDaysDirty, setIsWorkDaysDirty] = useState(false);
   const activeSegmentRef = useRef<string | null>(null);
+  const isPageUnloadingRef = useRef(false);
   const workTimeSaveRef = useRef<(() => void) | null>(null);
   const workDaysSaveRef = useRef<(() => void) | null>(null);
 
@@ -162,9 +163,42 @@ export function App() {
   );
 
   useEffect(() => {
-    const handleBlur = () => handleStatusUpdate(0);
+    const markUnloading = () => {
+      isPageUnloadingRef.current = true;
+    };
+    const resetUnloading = () => {
+      isPageUnloadingRef.current = false;
+    };
+
+    window.addEventListener("beforeunload", markUnloading);
+    window.addEventListener("pagehide", markUnloading);
+    window.addEventListener("pageshow", resetUnloading);
+
+    return () => {
+      window.removeEventListener("beforeunload", markUnloading);
+      window.removeEventListener("pagehide", markUnloading);
+      window.removeEventListener("pageshow", resetUnloading);
+    };
+  }, []);
+
+  useEffect(() => {
+    let blurTimer: number | null = null;
+    const handleBlur = () => {
+      blurTimer = window.setTimeout(() => {
+        if (isPageUnloadingRef.current) {
+          return;
+        }
+        handleStatusUpdate(0);
+      }, 120);
+    };
+
     window.addEventListener("blur", handleBlur);
-    return () => window.removeEventListener("blur", handleBlur);
+    return () => {
+      window.removeEventListener("blur", handleBlur);
+      if (blurTimer !== null) {
+        window.clearTimeout(blurTimer);
+      }
+    };
   }, [handleStatusUpdate]);
 
   useEffect(() => {
