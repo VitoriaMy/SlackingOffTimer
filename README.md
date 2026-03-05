@@ -20,6 +20,20 @@ npm run dev
 
 打开 `http://localhost:5173`
 
+## 环境变量
+
+可通过环境变量分别配置中英文标题：
+
+- `VITE_APP_TITLE_EN`：英文标题（默认标题来源）
+- `VITE_APP_TITLE_ZH`：中文标题（未配置时回退到英文标题）
+
+例如在项目根目录 `.env` 中配置：
+
+```bash
+VITE_APP_TITLE_EN=MoreYou
+VITE_APP_TITLE_ZH=摸鱼 MoreYou
+```
+
 ## 页面路由
 
 - `/` 首页（未配置时会自动跳到设置页）
