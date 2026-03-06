@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>组件设计对照预览</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #e9e9e6;
+        color: #1f1f1f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #efefec 0%, #e5e5e2 100%);
+      }
+
+      .page {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        padding: 32px 20px 56px;
+      }
+
+      h1 {
+        margin: 0 0 10px;
+        font-size: 28px;
+      }
+
+      .hint {
+        margin: 0 0 28px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .section {
+        margin-top: 34px;
+      }
+
+      .section:first-of-type {
+        margin-top: 0;
+      }
+
+      .sectionTitle {
+        margin: 0 0 8px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .sectionHint {
+        margin: 0 0 18px;
+        font-size: 14px;
+        color: #6b6b6b;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        border-radius: 22px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.66);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .cardHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        padding: 18px 20px 10px;
+      }
+
+      .cardTitle {
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .cardMeta {
+        font-size: 13px;
+        color: #7a7a7a;
+      }
+
+      .variants {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .variant {
+        padding: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .variant + .variant {
+        border-left: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .variantLabel {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .canvas {
+        min-height: 240px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        padding: 18px;
+        overflow: hidden;
+      }
+
+      .canvas.white {
+        background: #ffffff;
+      }
+
+      .canvas.black {
+        background: #0f0f10;
+      }
+
+      .canvas img {
+        max-width: 100%;
+        max-height: 220px;
+        object-fit: contain;
+        image-rendering: auto;
+      }
+
+      .compareGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+        gap: 20px;
+      }
+
+      .compareCard {
+        border-radius: 22px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .compareHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 16px;
+        padding: 18px 20px 10px;
+      }
+
+      .compareBody {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+      }
+
+      .comparePane {
+        padding: 16px;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .comparePane + .comparePane {
+        border-left: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      .paneLabel {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .designPane {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 260px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 16px;
+      }
+
+      .designPane img {
+        max-width: 100%;
+        max-height: 228px;
+        object-fit: contain;
+      }
+
+      .viewport {
+        position: relative;
+        overflow: hidden;
+        border-radius: 16px;
+        background: #f5f5f3;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+      }
+
+      .viewport iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 375px;
+        height: 812px;
+        border: 0;
+        transform-origin: top left;
+        pointer-events: none;
+      }
+
+      .viewport.hourglass {
+        width: 250px;
+        height: 300px;
+        margin: 0 auto;
+      }
+
+      .viewport.hourglass iframe {
+        transform: translate(-61px, -92px) scale(0.84);
+      }
+
+      .viewport.weekdays {
+        width: 250px;
+        height: 146px;
+        margin: 0 auto;
+      }
+
+      .viewport.weekdays iframe {
+        transform: translate(-20px, -414px) scale(0.82);
+      }
+
+      .viewport.mood {
+        width: 190px;
+        height: 124px;
+        margin: 0 auto;
+      }
+
+      .viewport.mood iframe {
+        transform: translate(-164px, -266px) scale(0.82);
+      }
+
+      .viewport.fish {
+        width: 184px;
+        height: 92px;
+        margin: 0 auto;
+      }
+
+      .viewport.fish iframe {
+        transform: translate(-82px, -298px) scale(0.82);
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .compareGrid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .variants {
+          grid-template-columns: 1fr;
+        }
+
+        .variant + .variant {
+          border-left: 0;
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .compareBody {
+          grid-template-columns: 1fr;
+        }
+
+        .comparePane + .comparePane {
+          border-left: 0;
+          border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <h1>组件设计对照预览</h1>
+      <p class="hint">上半部分用于检查透明 PNG 在白底和黑底下的表现，下半部分用于对照设计原图和当前实现。当前实现依赖本地 dev server： http://127.0.0.1:4173/</p>
+
+      <section class="section">
+        <h2 class="sectionTitle">透明背景观察</h2>
+        <p class="sectionHint">同一张 PNG 分别放在白底和黑底下，便于检查透明边缘、描边强度和图标是否需要反相版本。</p>
+
+        <div class="grid">
+        <article class="card">
+          <div class="cardHeader">
+            <div class="cardTitle">沙漏</div>
+            <div class="cardMeta">沙漏.png</div>
+          </div>
+          <div class="variants">
+            <div class="variant">
+              <div class="variantLabel">White</div>
+              <div class="canvas white"><img src="./沙漏.png" alt="沙漏 白底预览" /></div>
+            </div>
+            <div class="variant">
+              <div class="variantLabel">Black</div>
+              <div class="canvas black"><img src="./沙漏.png" alt="沙漏 黑底预览" /></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="cardHeader">
+            <div class="cardTitle">工作日开关</div>
+            <div class="cardMeta">工作日开关.png</div>
+          </div>
+          <div class="variants">
+            <div class="variant">
+              <div class="variantLabel">White</div>
+              <div class="canvas white"><img src="./工作日开关.png" alt="工作日开关 白底预览" /></div>
+            </div>
+            <div class="variant">
+              <div class="variantLabel">Black</div>
+              <div class="canvas black"><img src="./工作日开关.png" alt="工作日开关 黑底预览" /></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="cardHeader">
+            <div class="cardTitle">切换开关</div>
+            <div class="cardMeta">切换开关.png</div>
+          </div>
+          <div class="variants">
+            <div class="variant">
+              <div class="variantLabel">White</div>
+              <div class="canvas white"><img src="./切换开关.png" alt="切换开关 白底预览" /></div>
+            </div>
+            <div class="variant">
+              <div class="variantLabel">Black</div>
+              <div class="canvas black"><img src="./切换开关.png" alt="切换开关 黑底预览" /></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="cardHeader">
+            <div class="cardTitle">鱼图标</div>
+            <div class="cardMeta">fish.png</div>
+          </div>
+          <div class="variants">
+            <div class="variant">
+              <div class="variantLabel">White</div>
+              <div class="canvas white"><img src="./fish.png" alt="鱼图标 白底预览" /></div>
+            </div>
+            <div class="variant">
+              <div class="variantLabel">Black</div>
+              <div class="canvas black"><img src="./fish.png" alt="鱼图标 黑底预览" /></div>
+            </div>
+          </div>
+        </article>
+
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="sectionTitle">设计与实现对照</h2>
+        <p class="sectionHint">左侧是组件设计图，右侧是从当前页面截取的实现区域，用于快速发现尺寸、边距和造型偏差。</p>
+
+        <div class="compareGrid">
+          <article class="compareCard">
+            <div class="compareHeader">
+              <div class="cardTitle">沙漏</div>
+              <div class="cardMeta">设计图 vs 首页实现</div>
+            </div>
+            <div class="compareBody">
+              <div class="comparePane">
+                <div class="paneLabel">Design</div>
+                <div class="designPane"><img src="./沙漏.png" alt="沙漏设计图" /></div>
+              </div>
+              <div class="comparePane">
+                <div class="paneLabel">Implementation</div>
+                <div class="viewport hourglass">
+                  <iframe src="http://127.0.0.1:4173/" title="首页沙漏实现"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compareCard">
+            <div class="compareHeader">
+              <div class="cardTitle">工作日开关</div>
+              <div class="cardMeta">设计图 vs 设置页实现</div>
+            </div>
+            <div class="compareBody">
+              <div class="comparePane">
+                <div class="paneLabel">Design</div>
+                <div class="designPane"><img src="./工作日开关.png" alt="工作日开关设计图" /></div>
+              </div>
+              <div class="comparePane">
+                <div class="paneLabel">Implementation</div>
+                <div class="viewport weekdays">
+                  <iframe src="http://127.0.0.1:4173/settings" title="设置页工作日实现"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compareCard">
+            <div class="compareHeader">
+              <div class="cardTitle">切换开关</div>
+              <div class="cardMeta">设计图 vs 设置页实现</div>
+            </div>
+            <div class="compareBody">
+              <div class="comparePane">
+                <div class="paneLabel">Design</div>
+                <div class="designPane"><img src="./切换开关.png" alt="切换开关设计图" /></div>
+              </div>
+              <div class="comparePane">
+                <div class="paneLabel">Implementation</div>
+                <div class="viewport mood">
+                  <iframe src="http://127.0.0.1:4173/settings" title="设置页切换开关实现"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="compareCard">
+            <div class="compareHeader">
+              <div class="cardTitle">鱼图标</div>
+              <div class="cardMeta">设计图 vs 首页实现</div>
+            </div>
+            <div class="compareBody">
+              <div class="comparePane">
+                <div class="paneLabel">Design</div>
+                <div class="designPane"><img src="./fish.png" alt="鱼图标设计图" /></div>
+              </div>
+              <div class="comparePane">
+                <div class="paneLabel">Implementation</div>
+                <div class="viewport fish">
+                  <iframe src="http://127.0.0.1:4173/" title="首页鱼图标实现"></iframe>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

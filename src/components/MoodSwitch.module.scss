@@ -1,0 +1,23 @@
+.switch {
+    aspect-ratio: 37 / 20;
+    position: relative;
+    color: var(--muted-color);
+}
+
+.lineIcon {
+    width: 100%;
+}
+
+.faceIcon {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.checked {
+    color: var(--primary-color);
+    .faceIcon {
+        left: unset;
+        right: 0;
+    }
+}

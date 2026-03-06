@@ -1,0 +1,50 @@
+.modalMask {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	background: rgb(0 0 0 / 45%);
+}
+
+.modal {
+	width: min(100%, 420px);
+	max-height: 90vh;
+	overflow: auto;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: 0 10px 30px rgb(0 0 0 / 20%);
+}
+
+.content {
+	padding: 20px;
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 0 20px 20px;
+}
+
+.button {
+	min-width: 72px;
+	border: 0;
+	border-radius: 8px;
+	padding: 8px 14px;
+	font-size: 14px;
+	line-height: 1.2;
+	cursor: pointer;
+}
+
+.cancel {
+	background: #eceef2;
+	color: #2e2e2e;
+}
+
+.ok {
+	background: var(--primary-color, #2f7dff);
+	color: #fff;
+}

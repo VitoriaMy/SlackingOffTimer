@@ -41,15 +41,22 @@ function Chart({
     <div className={styles.chartContent}>
       {d7.map(item => (
         <div key={item.day} className={styles.chartItem}>
-          <div className={styles.chartItemTime} style={{
-            height: `${item.ratio}%`
-          }}>
-            <div className={styles.time}>{item.time}</div>
+          <div className={styles.chartItemTimeWrap}>
+            <div className={styles.chartItemTime} style={{
+              height: `${item.ratio}%`
+            }}>
+              <div className={styles.time}>{item.time}</div>
+            </div>
           </div>
-          <div className={styles.chartItemDay}>{item.day}</div>
         </div>
       ))}
     </div>
+    <div className={styles.chartAxis}>
+      {d7.map(item => (
+        <div key={item.day} className={styles.chartItemDay}>{item.day}</div>
+      ))}
+    </div>
+    <div className={styles.chartAxisNote}>日</div>
   </div>
 }
 
@@ -62,42 +69,42 @@ export function TrendsPage() {
   const data = useMemo(() => {
     return [
       {
-        day: i18n("weekMon"),
+        day: "17",
+        time: "4h",
+        ratio: 58,
+      },
+      {
+        day: "18",
+        time: "4.5h",
+        ratio: 74
+      },
+      {
+        day: "19",
+        time: "5h",
+        ratio: 90
+      },
+      {
+        day: "20",
+        time: "2.4h",
+        ratio: 42
+      },
+      {
+        day: "21",
+        time: "4.1h",
+        ratio: 68
+      },
+      {
+        day: "22",
+        time: "3h",
+        ratio: 55
+      },
+      {
+        day: "23",
         time: "1.2h",
-        ratio: 23,
-      },
-      {
-        day: i18n("weekTue"),
-        time: "2.25h",
-        ratio: 35
-      },
-      {
-        day: i18n("weekWed"),
-        time: "0.75h",
-        ratio: 15
-      },
-      {
-        day: i18n("weekThu"),
-        time: "1.08h",
-        ratio: 20
-      },
-      {
-        day: i18n("weekFri"),
-        time: "3.17h",
-        ratio: 50
-      },
-      {
-        day: i18n("weekSat"),
-        time: "0.5h",
-        ratio: 10
-      },
-      {
-        day: i18n("weekSun"),
-        time: "1.83h",
-        ratio: 40
+        ratio: 16
       },
     ]
-  }, [i18n])
+  }, [])
 
   return (
     <Layout
@@ -110,12 +117,10 @@ export function TrendsPage() {
       }}
     >
       <div className={styles.cards}>
-        {/* 近7天总计 */}
-        <Card label={i18n("total7")} value={'123.2h'} />
-        {/* 日均摸鱼 */}
-        <Card label={i18n("avgRatio")} value={'1.76h'} />
+        <Card label={i18n("total7")} value={'28.6h'} />
+        <Card label={'日均摸鱼'} value={'5.2h'} />
       </div>
-      <Chart title={i18n("sevenDaysTitle")} d7={data} />
+      <Chart title={'趋势图'} d7={data} />
     </Layout>
   );
 }

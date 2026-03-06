@@ -1,0 +1,14 @@
+<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+    <defs>
+        <mask id="prefix__a">
+            <path fill="#fff" d="M0 0h20v20H0z" />
+            <circle cx="6.7" cy="7.4" r="1.4" fill="#000" />
+            <circle cx="13.3" cy="7.4" r="1.4" fill="#000" />
+            <!-- 嘴：左半 + use 镜像右半 -->
+            <path id="mouth-left" d="M10 13 A3 3 0 0 0 7.4 14.5" stroke="#000" stroke-width="1.4" stroke-linecap="round"
+                fill="none" />
+            <use href="#mouth-left" transform="matrix(-1 0 0 1 20 0)" />
+        </mask>
+    </defs>
+    <circle cx="10" cy="10" r="10" mask="url(#prefix__a)" />
+</svg>
