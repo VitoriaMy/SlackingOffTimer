@@ -2,34 +2,17 @@ import styles from "./page.module.scss";
 import { Layout } from "@/components/layout";
 import { ArrowLeftOutlined } from "@ant-design/icons";
 import { MoodSwitch } from "@/components/MoodSwitch";
+import { BottonSwitch } from "@/components/BottonSwitch";
 import { usei18n } from "@/hooks/usei18n";
 import { useSettingsStore } from "@/store/settingsStore";
 import { validateSchedule } from "@/schedule";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SettingRow } from "@/components/SettingRow";
 import { WorkSchedule } from "../../../lib/types";
 
 type I18nWeekdayKey = "weekSun" | "weekMon" | "weekTue" | "weekWed" | "weekThu" | "weekFri" | "weekSat";
 
-function SettingRow({
-    label,
-    children,
-    more
-}: {
-    label: string;
-    children: React.ReactNode;
-    more?: React.ReactNode;
-}) {
-    return <div className={styles.settingRow}>
-        <div className={styles.rowHead}>
-            <div className={styles.label}>{label}</div>
-            {more && <div className={styles.more}>{more}</div>}
-        </div>
-        <div className={styles.control}>
-            {children}
-        </div>
-    </div>
-}
 
 function TimeSelector({
     value,
@@ -89,20 +72,12 @@ function WeekdaySelector({
         {
             WEEKDAYS.map((day) => {
                 return (
-                    <button
-                        type="button"
-                        key={day.key}
-                        className={`${styles.weekdayItem}${activeSet.has(day.index) ? ` ${styles.active}` : ""}`}
+                    <BottonSwitch
+                        key={day.index}
+                        checked={activeSet.has(day.index)}
+                        label={i18n(day.key)}
                         onClick={() => onToggle(day.index)}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                onToggle(day.index);
-                            }
-                        }}
-                    >
-                        {formatWeekdayLabel(i18n(day.key), isZh)}
-                    </button>
+                    />
                 )
             })
         }

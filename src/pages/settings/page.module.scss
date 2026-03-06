@@ -1,132 +1,100 @@
 .container {
-	display: grid;
-	gap: 38px;
-	padding-top: 10px;
-}
-
-.settingRow {
-	display: grid;
-	gap: 14px;
-}
-
-.rowHead {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-}
-
-.label {
-	font-size: 14px;
-	color: var(--muted-color);
-	font-weight: 500;
-}
-
-.control {
-	display: flex;
-	align-items: stretch;
-	width: 100%;
-}
-
-.more {
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
-	color: var(--primary-color);
+  display: grid;
+  gap: 38px;
+  padding-top: 10px;
 }
 
 .timeRange {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 16px;
-	width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
 }
 
 .timeValue {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 62px;
-	border-radius: 15px;
-	background: var(--surface-bg);
-	border: 0;
-	font-size: 24px;
-	line-height: 1;
-	font-weight: 700;
-	letter-spacing: -0.03em;
-	font-variant-numeric: tabular-nums;
-	color: var(--primary-color);
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-	cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 62px;
+  border-radius: 15px;
+  background: var(--surface-bg);
+  border: 0;
+  font-size: 24px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--primary-color);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  cursor: pointer;
 }
 
 .timeSep {
-	display: none;
+  display: none;
 }
 
 .weekdaySelector {
-	display: grid;
-	grid-template-columns: repeat(7, minmax(0, 1fr));
-	gap: 8px;
-	width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
 }
 
 .weekdayItem {
-	width: 100%;
-	height: 70px;
-	padding: 0;
-	border: 0;
-	border-radius: 16px;
-	background: #fbfbfb;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-align: center;
-	font-size: 18px;
-	line-height: 1.08;
-	font-weight: 700;
-	color: #9a9a9a;
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
-	cursor: pointer;
-	transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+  width: 100%;
+  height: 70px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: #fbfbfb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.08;
+  font-weight: 700;
+  color: #9a9a9a;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    transform 120ms ease;
 }
 
 .active {
-	background: #111111;
-	color: #ffffff;
-	box-shadow: none;
+  background: #111111;
+  color: #ffffff;
+  box-shadow: none;
 }
 
 .weekdayItem:active {
-	transform: scale(0.98);
+  transform: scale(0.98);
 }
 
 .footer {
-	margin-top: auto;
-	padding-top: 56px;
+  margin-top: auto;
+  padding-top: 56px;
 }
 
 .saveButton {
-	width: 100%;
-	height: 62px;
-	border-radius: 19px;
-	background: var(--primary-color);
-	border: 0;
-	color: #fff;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	text-align: center;
-	font-size: 17px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-	box-shadow: var(--shadow-soft);
-	cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 327px;
+  height: 60px;
+  background: #2a2a3c;
+  border-radius: 16px;
+
+  font-weight: bold;
+  font-size: 18px;
+  color: #fafafa;
 }
 
 @media (max-width: 360px) {
-	.weekdayItem {
-		height: 64px;
-		font-size: 15px;
-	}
+  .weekdayItem {
+    height: 64px;
+    font-size: 15px;
+  }
 }
