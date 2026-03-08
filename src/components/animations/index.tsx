@@ -9,6 +9,9 @@ export function Animations() {
     <div className={styles.container}>
       <SandGlass className={styles.sandglass} />
       <FishAnimation className={styles.fish} />
+      <div className={styles.waterWrapper}>
+        <WaterAnimation className={styles.water} />
+      </div>
     </div>
   );
 }
