@@ -6,6 +6,9 @@ export function WaterAnimation({ className }: { className?: string }) {
       src="/animations/water.json"
       autoplay={true}
       loop={true}
+      renderConfig={{
+        wasmUrl: '/animations/dotlottie-player.wasm',
+      }}
     />
   );
 }

@@ -1,5 +1,7 @@
 .switch {
-    aspect-ratio: 37 / 20;
+    display: block;
+    width: 37px;
+    height: 20px;
     position: relative;
     color: var(--font-color);
 }
@@ -12,6 +14,8 @@
     position: absolute;
     left: 0;
     top: 0;
+    width: 20px;
+    transform: translate(-50%, 0);
 }
 
 .checked {
@@ -19,5 +23,6 @@
     .faceIcon {
         left: unset;
         right: 0;
+        transform: translate(50%, 0);
     }
 }

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 import styles from "./index.module.scss";
 import classNames from "classnames";
 
@@ -28,7 +29,7 @@ export function Layout({ children,
     return <div className={styles.page}>
         <div className={styles.header}>
             {
-                left ? <Link to={left.to} className={classNames(styles.navLink, styles.headerLeft)}>{left.children}</Link> : null
+                <Link to={left?.to || "/"} className={classNames(styles.navLink, styles.headerLeft)}>{left?.children || <ArrowLeftOutlined />}</Link>
             }
             <div className={styles.headerTitle}>
                 {title}

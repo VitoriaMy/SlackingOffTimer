@@ -11,6 +11,9 @@ export function FishAnimation({
       loop
       autoplay
       className={className}
+      renderConfig={{
+        wasmUrl: '/animations/dotlottie-player.wasm',
+      }}
     />
   );
 };

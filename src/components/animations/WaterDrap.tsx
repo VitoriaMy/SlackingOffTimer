@@ -26,7 +26,7 @@ const stepTimes = {
   }
 };
 
-export function WaterDrapAnimation({ className }: { className?: string }) {
+export function WaterDrapAnimation({ className, isRunning }: { className?: string, isRunning: boolean }) {
   const animationRef = useRef<DotLottie | null>(null);
   const timeIdRef = useRef<number | void>();
   const currentStepRef = useRef(0);
@@ -76,15 +76,21 @@ export function WaterDrapAnimation({ className }: { className?: string }) {
   );
 
   useEffect(() => {
-    if (!isReady || !animationRef.current) return;
+    if (!isRunning || !isReady || !animationRef.current) return;
     currentStepRef.current = currentStepRef.current || 0;
     handleRunAnimation();
     return () => {
       if (timeIdRef.current) {
         clearTimeout(timeIdRef.current);
       }
+      if(animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current.setFrame(34);
+      }
+      currentStepRef.current = 0;
+      setStep(0);
     };
-  }, [isReady, handleRunAnimation]);
+  }, [isReady, handleRunAnimation, isRunning]);
 
   return (
     <div className={classNames(className, styles[`step${step}`])}>
@@ -93,6 +99,9 @@ export function WaterDrapAnimation({ className }: { className?: string }) {
         src="/animations/waterdrop.json"
         autoplay={false}
         loop={false}
+        renderConfig={{
+          wasmUrl: '/animations/dotlottie-player.wasm',
+        }}
       />
     </div>
   );

@@ -1,6 +1,5 @@
 import styles from "./page.module.scss";
 import { Layout } from "@/components/layout";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 import { MoodSwitch } from "@/components/MoodSwitch";
 import { BottonSwitch } from "@/components/BottonSwitch";
 import { usei18n } from "@/hooks/usei18n";
@@ -162,10 +161,6 @@ export function SettingsPage() {
     return (
         <Layout
             header={{
-                left: {
-                    children: <ArrowLeftOutlined />,
-                    to: "/",
-                },
                 title: i18n("settings"),
             }}
         >

@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { usei18n } from "@/hooks/usei18n";
 import { Layout } from "@/components/layout";
 import { Animations } from "@/components/animations";
@@ -31,6 +31,10 @@ export function HomePage() {
       <div className={styles.page}>
         <Animations />
         <StatusCard />
+      </div>
+      <div>
+        <div><Link to="/animations">动画控制演示</Link></div>
+        <div><Link to="/components">组件展示</Link></div>
       </div>
     </Layout>
   );

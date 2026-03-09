@@ -1,5 +1,4 @@
 import styles from "./page.module.scss";
-import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Layout } from "@/components/layout";
 import { usei18n } from "../../hooks/usei18n";
 import { useMemo } from "react";
@@ -53,10 +52,6 @@ export function TrendsPage() {
   return (
     <Layout
       header={{
-        left: {
-          children: <ArrowLeftOutlined />,
-          to: "/",
-        },
         title: i18n("trends"),
       }}
     >
