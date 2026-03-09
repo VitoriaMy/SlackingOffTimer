@@ -7,14 +7,16 @@ import { SettingOutlined, LineChartOutlined } from "@ant-design/icons";
 import { StatusCard } from "./statusCard";
 import styles from "./page.module.scss";
 
+// 当前运行环境变量是开发环境还是生产环境
+const isDev = import.meta.env.DEV;
+
 export function HomePage({
   recordSlackSwitch,
   currentSwitchState,
 }: {
   recordSlackSwitch: () => void;
-  currentSwitchState: number; 
+  currentSwitchState: number;
 }) {
-  const i18n = usei18n();
   const { configured } = useSettingsStore();
 
   if (!configured) {
@@ -41,11 +43,14 @@ export function HomePage({
           currentSwitchState={currentSwitchState}
         />
       </div>
-      <div>
-        <div><Link to="/animations">动画控制演示</Link></div>
-        <div><Link to="/components">组件展示</Link></div>
-        <div><Link to="/config">配置页面</Link></div>
-      </div>
+      {
+        isDev ? <div>
+          <div><Link to="/animations">动画控制演示</Link></div>
+          <div><Link to="/components">组件展示</Link></div>
+          <div><Link to="/status">状态页面</Link></div>
+        </div> : null
+      }
+
     </Layout>
   );
 }

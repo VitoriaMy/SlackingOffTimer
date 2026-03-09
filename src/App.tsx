@@ -4,7 +4,7 @@ import { TrendsPage } from "@/pages/trends/page";
 import { SettingsPage } from "@/pages/settings/page";
 import { AnimationsPage } from "@/pages/animations/page";
 import { ComponentsPage } from "@/pages/components/page";
-import { ConfigPage } from "@/pages/config/page";
+import { StautsPage } from "@/pages/status/page";
 import { useSlackRecord } from "@/hooks/useSlackRecord";
 
 export function App() {
@@ -31,7 +31,7 @@ export function App() {
         element={<AnimationsPage />}
       />
       <Route path="/components" element={<ComponentsPage />} />
-      <Route path="/config" element={<ConfigPage />} />
+      <Route path="/status" element={<StautsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

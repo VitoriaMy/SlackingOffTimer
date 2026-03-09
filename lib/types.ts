@@ -15,6 +15,11 @@ export type SlackingRecord = {
   switchState: SlackSwitchState;
 };
 
+export type ScheduleHistoryRecord = {
+  savedAt: number;
+  schedule: WorkSchedule;
+};
+
 export type AppLanguage = "zh" | "en";
 
 export const defaultSchedule: WorkSchedule = {
