@@ -8,25 +8,39 @@ import { validateSchedule } from "@/schedule";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SettingRow } from "@/components/SettingRow";
-import { WorkSchedule } from "../../../lib/types";
+import { Timer } from "@/components/timer";
+import type { WorkSchedule } from "../../../lib/types";
 
 type I18nWeekdayKey = "weekSun" | "weekMon" | "weekTue" | "weekWed" | "weekThu" | "weekFri" | "weekSat";
 
 
-function TimeSelector({
-    value,
-    onClick
-}: {
-    value: string;
-    onClick?: () => void;
-}) {
-    return <button type="button" className={styles.timeValue} onClick={onClick}>{value || "--:--"}</button>
+function toMinutes(hhmm: string): number {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
 }
 
-const WORK_START_OPTIONS = ["08:30", "09:00", "09:30", "10:00"];
-const WORK_END_OPTIONS = ["18:00", "18:30", "19:00", "19:30"];
-const LUNCH_START_OPTIONS = ["11:30", "12:00", "12:30", "13:00"];
-const LUNCH_END_OPTIONS = ["13:00", "13:30", "14:00", "14:30"];
+function fromMinutes(total: number): string {
+    const safe = Math.max(0, Math.min(total, 23 * 60 + 59));
+    const h = Math.floor(safe / 60);
+    const m = safe % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function clampTime(value: string, min: string, max: string): string {
+    const minutes = toMinutes(value);
+    const minMinutes = toMinutes(min);
+    const maxMinutes = toMinutes(max);
+
+    if (minutes < minMinutes) {
+        return min;
+    }
+
+    if (minutes > maxMinutes) {
+        return max;
+    }
+
+    return value;
+}
 
 const WEEKDAYS: { key: I18nWeekdayKey; index: number }[] = [
     { key: "weekMon", index: 1 },
@@ -53,7 +67,6 @@ function formatWeekdayLabel(label: string, isZh: boolean) {
 
     return label;
 }
-
 
 function WeekdaySelector({
     value,
@@ -106,13 +119,84 @@ export function SettingsPage() {
     const workDaysLabel = isZh ? "工作日选择" : i18n("sectionWorkDays");
     const submitLabel = configured ? i18n("save") : isZh ? "开始摸鱼吧" : i18n("saveAndStart");
 
-    const cycleTime = (value: string, options: string[]) => {
-        const index = options.indexOf(value);
-        return options[(index + 1 + options.length) % options.length];
-    };
-
     const updateDraft = (next: Partial<WorkSchedule>) => {
         setDraft((current) => ({ ...current, ...next }));
+    };
+
+    const handleStartTimeChange = (nextStart: string) => {
+        setDraft((current) => {
+            const endTime = toMinutes(nextStart) > toMinutes(current.endTime) ? nextStart : current.endTime;
+
+            const next: WorkSchedule = {
+                ...current,
+                startTime: nextStart,
+                endTime,
+            };
+
+            if (next.lunchStart && next.lunchEnd) {
+                const safeLunchStart = clampTime(next.lunchStart, next.startTime, next.endTime);
+                const safeLunchEnd = clampTime(next.lunchEnd, safeLunchStart, next.endTime);
+                next.lunchStart = safeLunchStart;
+                next.lunchEnd = safeLunchEnd;
+            }
+
+            return next;
+        });
+    };
+
+    const handleEndTimeChange = (nextEnd: string) => {
+        setDraft((current) => {
+            const startTime = toMinutes(nextEnd) < toMinutes(current.startTime) ? nextEnd : current.startTime;
+
+            const next: WorkSchedule = {
+                ...current,
+                startTime,
+                endTime: nextEnd,
+            };
+
+            if (next.lunchStart && next.lunchEnd) {
+                const safeLunchStart = clampTime(next.lunchStart, next.startTime, next.endTime);
+                const safeLunchEnd = clampTime(next.lunchEnd, safeLunchStart, next.endTime);
+                next.lunchStart = safeLunchStart;
+                next.lunchEnd = safeLunchEnd;
+            }
+
+            return next;
+        });
+    };
+
+    const handleLunchStartChange = (nextLunchStart: string) => {
+        setDraft((current) => {
+            if (!current.lunchStart || !current.lunchEnd) {
+                return current;
+            }
+
+            const lunchStart = clampTime(nextLunchStart, current.startTime, current.endTime);
+            const lunchEnd = toMinutes(current.lunchEnd) < toMinutes(lunchStart) ? lunchStart : current.lunchEnd;
+
+            return {
+                ...current,
+                lunchStart,
+                lunchEnd,
+            };
+        });
+    };
+
+    const handleLunchEndChange = (nextLunchEnd: string) => {
+        setDraft((current) => {
+            if (!current.lunchStart || !current.lunchEnd) {
+                return current;
+            }
+
+            const lunchEnd = clampTime(nextLunchEnd, current.startTime, current.endTime);
+            const lunchStart = toMinutes(current.lunchStart) > toMinutes(lunchEnd) ? lunchEnd : current.lunchStart;
+
+            return {
+                ...current,
+                lunchStart,
+                lunchEnd,
+            };
+        });
     };
 
     const toggleWorkDay = (dayIndex: number) => {
@@ -141,8 +225,8 @@ export function SettingsPage() {
 
             return {
                 ...current,
-                lunchStart: current.lunchStart ?? "12:00",
-                lunchEnd: current.lunchEnd ?? "13:00",
+                lunchStart: current.lunchStart ?? fromMinutes(Math.max(toMinutes(current.startTime), 12 * 60)),
+                lunchEnd: current.lunchEnd ?? fromMinutes(Math.min(toMinutes(current.endTime), 13 * 60)),
             };
         });
     };
@@ -167,8 +251,20 @@ export function SettingsPage() {
             <div className={styles.container}>
                 <SettingRow label={workTimeLabel}>
                     <div className={styles.timeRange}>
-                        <TimeSelector value={draft.startTime} onClick={() => updateDraft({ startTime: cycleTime(draft.startTime, WORK_START_OPTIONS) })} />
-                        <TimeSelector value={draft.endTime} onClick={() => updateDraft({ endTime: cycleTime(draft.endTime, WORK_END_OPTIONS) })} />
+                        <Timer
+                            className={styles.timeValue}
+                            value={draft.startTime}
+                            minTime="00:00"
+                            maxTime={draft.endTime}
+                            onChange={handleStartTimeChange}
+                        />
+                        <Timer
+                            className={styles.timeValue}
+                            value={draft.endTime}
+                            minTime={draft.startTime}
+                            maxTime="23:59"
+                            onChange={handleEndTimeChange}
+                        />
                     </div>
                 </SettingRow>
                 <SettingRow
@@ -176,8 +272,28 @@ export function SettingsPage() {
                     more={<MoodSwitch checked={Boolean(draft.lunchStart && draft.lunchEnd)} onClick={toggleLunchBreak} />}
                 >
                     <div className={styles.timeRange}>
-                        {draft.lunchStart ? <TimeSelector value={draft.lunchStart} onClick={() => updateDraft({ lunchStart: cycleTime(draft.lunchStart || "12:00", LUNCH_START_OPTIONS) })} /> : <div className={styles.timeValue}>{getLunchTimeText(draft)}</div>}
-                        {draft.lunchEnd ? <TimeSelector value={draft.lunchEnd} onClick={() => updateDraft({ lunchEnd: cycleTime(draft.lunchEnd || "13:00", LUNCH_END_OPTIONS) })} /> : <div className={styles.timeValue}>{getLunchTimeText(draft)}</div>}
+                        {draft.lunchStart && draft.lunchEnd ? (
+                            <Timer
+                                className={styles.timeValue}
+                                value={draft.lunchStart}
+                                minTime={draft.startTime}
+                                maxTime={draft.lunchEnd}
+                                onChange={handleLunchStartChange}
+                            />
+                        ) : (
+                            <div className={styles.timeValue}>{getLunchTimeText(draft)}</div>
+                        )}
+                        {draft.lunchStart && draft.lunchEnd ? (
+                            <Timer
+                                className={styles.timeValue}
+                                value={draft.lunchEnd}
+                                minTime={draft.lunchStart}
+                                maxTime={draft.endTime}
+                                onChange={handleLunchEndChange}
+                            />
+                        ) : (
+                            <div className={styles.timeValue}>{getLunchTimeText(draft)}</div>
+                        )}
                     </div>
                 </SettingRow>
                 <SettingRow label={workDaysLabel}>

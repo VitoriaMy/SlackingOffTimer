@@ -4,15 +4,19 @@ import { TrendsPage } from "@/pages/trends/page";
 import { SettingsPage } from "@/pages/settings/page";
 import { AnimationsPage } from "@/pages/animations/page";
 import { ComponentsPage } from "@/pages/components/page";
-
+import { ConfigPage } from "@/pages/config/page";
+import { useSlackRecord } from "@/hooks/useSlackRecord";
 
 export function App() {
-
+  const { recordSlackSwitch, currentSwitchState } = useSlackRecord();
   return (
     <Routes>
       <Route
         path="/"
-        element={<HomePage />}
+        element={<HomePage
+          recordSlackSwitch={recordSlackSwitch}
+          currentSwitchState={currentSwitchState}
+        />}
       />
       <Route
         path="/trends"
@@ -27,6 +31,7 @@ export function App() {
         element={<AnimationsPage />}
       />
       <Route path="/components" element={<ComponentsPage />} />
+      <Route path="/config" element={<ConfigPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

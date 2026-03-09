@@ -22,28 +22,79 @@
 	color: #202a35;
 }
 
-.range {
-	width: 100%;
+.pickers {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 14px;
+	padding: 0 8px;
+	--title-height: 20px;
+	--title-gap: 8px;
+}
+
+.pickerColumn {
+	display: flex;
+	flex-direction: column;
+	gap: var(--title-gap);
+}
+
+.pickerTitle {
+	height: var(--title-height);
+	line-height: var(--title-height);
+	text-align: center;
+	font-size: 12px;
+	color: #6b7280;
+	font-weight: 600;
+}
+
+.pickerList {
+	height: var(--picker-height);
+	overflow-y: auto;
+	scroll-snap-type: y mandatory;
+	scroll-behavior: smooth;
+	-webkit-overflow-scrolling: touch;
+	padding-block: calc((var(--picker-height) - var(--item-height)) / 2);
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+.pickerList::-webkit-scrollbar {
+	display: none;
+}
+
+.pickerItem {
+	height: var(--item-height);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	font-weight: 600;
+	color: #9aa3af;
+	scroll-snap-align: center;
+	user-select: none;
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.active {
+	color: #1f2a37;
+}
+
+.selectionFrame {
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	top: calc(var(--title-height) + var(--title-gap) + (var(--picker-height) / 2));
+	height: var(--item-height);
+	transform: translateY(-50%);
+	border-radius: 10px;
+	border: 1px solid #d7dde5;
+	background: rgba(255, 255, 255, 0.55);
+	pointer-events: none;
 }
 
 .hint {
 	text-align: center;
 	color: #6b7280;
 	font-size: 12px;
-}
-
-.quickActions {
-	display: flex;
-	justify-content: center;
-	gap: 10px;
-}
-
-.quickButton {
-	border: 0;
-	border-radius: 8px;
-	padding: 6px 10px;
-	background: #f3f4f6;
-	color: #2f3a47;
-	font-size: 12px;
-	cursor: pointer;
 }

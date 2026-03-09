@@ -7,7 +7,13 @@ import { SettingOutlined, LineChartOutlined } from "@ant-design/icons";
 import { StatusCard } from "./statusCard";
 import styles from "./page.module.scss";
 
-export function HomePage() {
+export function HomePage({
+  recordSlackSwitch,
+  currentSwitchState,
+}: {
+  recordSlackSwitch: () => void;
+  currentSwitchState: number; 
+}) {
   const i18n = usei18n();
   const { configured } = useSettingsStore();
 
@@ -29,12 +35,16 @@ export function HomePage() {
       }}
     >
       <div className={styles.page}>
-        <Animations />
-        <StatusCard />
+        <Animations isRunning={currentSwitchState === 1} />
+        <StatusCard
+          recordSlackSwitch={recordSlackSwitch}
+          currentSwitchState={currentSwitchState}
+        />
       </div>
       <div>
         <div><Link to="/animations">动画控制演示</Link></div>
         <div><Link to="/components">组件展示</Link></div>
+        <div><Link to="/config">配置页面</Link></div>
       </div>
     </Layout>
   );

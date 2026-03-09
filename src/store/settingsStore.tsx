@@ -1,13 +1,16 @@
 import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import {
+  keepRecent7DaysRecords,
   loadConfigured,
   loadLanguage,
   loadSchedule,
+  loadSlackingRecords,
   saveConfigured,
   saveLanguage,
-  saveSchedule
+  saveSchedule,
+  saveSlackingRecords
 } from "../../lib/storage";
-import { AppLanguage, WorkSchedule } from "../../lib/types";
+import { AppLanguage, SlackingRecord, SlackSwitchState, WorkSchedule } from "../../lib/types";
 import { normalizeSchedule } from "../schedule";
 
 type SettingsStoreValue = {
@@ -15,10 +18,13 @@ type SettingsStoreValue = {
   languageDraft: AppLanguage;
   configured: boolean;
   schedule: WorkSchedule;
+  slackingRecords: SlackingRecord[];
   updateLanguage: (next: AppLanguage) => void;
   setLanguageDraft: (next: AppLanguage) => void;
   updateSchedule: (next: WorkSchedule, shouldMarkConfigured?: boolean) => void;
   updateConfigured: (next: boolean) => void;
+  addSlackingRecord: (switchState: SlackSwitchState) => void;
+  reloadSlackingRecords: () => void;
 };
 
 const SettingsStoreContext = createContext<SettingsStoreValue | null>(null);
@@ -28,6 +34,7 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
   const [languageDraft, setLanguageDraft] = useState<AppLanguage>(() => loadLanguage());
   const [configured, setConfigured] = useState<boolean>(() => loadConfigured());
   const [schedule, setSchedule] = useState<WorkSchedule>(() => normalizeSchedule(loadSchedule()));
+  const [slackingRecords, setSlackingRecords] = useState<SlackingRecord[]>(() => loadSlackingRecords());
 
   const updateLanguage = (next: AppLanguage) => {
     setLanguage(next);
@@ -50,18 +57,35 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addSlackingRecord = (switchState: SlackSwitchState) => {
+    setSlackingRecords((current) => {
+      const next = keepRecent7DaysRecords([...current, { timestamp: Date.now(), switchState }]);
+      saveSlackingRecords(next);
+      return next;
+    });
+  };
+
+  const reloadSlackingRecords = () => {
+    const records = loadSlackingRecords();
+    setSlackingRecords(records);
+    saveSlackingRecords(records);
+  };
+
   const value = useMemo(
     () => ({
       language,
       languageDraft,
       configured,
       schedule,
+      slackingRecords,
       updateLanguage,
       setLanguageDraft,
       updateSchedule,
-      updateConfigured
+      updateConfigured,
+      addSlackingRecord,
+      reloadSlackingRecords
     }),
-    [configured, language, languageDraft, schedule]
+    [configured, language, languageDraft, schedule, slackingRecords]
   );
 
   return <SettingsStoreContext.Provider value={value}>{children}</SettingsStoreContext.Provider>;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import classNames from "classnames";
 import styles from "./style.module.scss";
 import { Modal } from "@/components/modal";
@@ -55,6 +55,9 @@ function getSafeMinutes(input: string, fallback: number) {
 }
 
 export function Timer({ maxTime, minTime, value, onChange, className }: TimerProps) {
+    const ITEM_HEIGHT = 36;
+    const VISIBLE_ROWS = 5;
+    const SCROLL_END_DELAY = 180;
     const [open, setOpen] = useState(false);
 
     const range = useMemo(() => {
@@ -73,6 +76,50 @@ export function Timer({ maxTime, minTime, value, onChange, className }: TimerPro
     const rawValue = getSafeMinutes(value, range.lower);
     const normalizedValue = clamp(rawValue, range.lower, range.upper);
     const [draftValue, setDraftValue] = useState(normalizedValue);
+    const [draftHour, setDraftHour] = useState(Math.floor(normalizedValue / 60));
+    const [draftMinute, setDraftMinute] = useState(normalizedValue % 60);
+    const hourListRef = useRef<HTMLDivElement | null>(null);
+    const minuteListRef = useRef<HTMLDivElement | null>(null);
+    const hourScrollTimer = useRef<number | null>(null);
+    const minuteScrollTimer = useRef<number | null>(null);
+    const shouldAlignOnOpenRef = useRef(false);
+    const isAligningOnOpenRef = useRef(false);
+    const alignTimerRef = useRef<number | null>(null);
+
+    const hourRange = useMemo(() => {
+        const minHour = Math.floor(range.lower / 60);
+        const maxHour = Math.floor(range.upper / 60);
+
+        return {
+            minHour,
+            maxHour,
+        };
+    }, [range.lower, range.upper]);
+
+    const hourOptions = useMemo(
+        () => Array.from({ length: hourRange.maxHour - hourRange.minHour + 1 }, (_, index) => hourRange.minHour + index),
+        [hourRange.maxHour, hourRange.minHour],
+    );
+
+    const getMinuteRange = (hour: number) => {
+        const isLowerHour = hour === hourRange.minHour;
+        const isUpperHour = hour === hourRange.maxHour;
+
+        const minMinute = isLowerHour ? range.lower % 60 : 0;
+        const maxMinute = isUpperHour ? range.upper % 60 : 59;
+
+        return {
+            minMinute,
+            maxMinute,
+        };
+    };
+
+    const minuteRange = useMemo(() => getMinuteRange(draftHour), [draftHour, hourRange.maxHour, hourRange.minHour, range.lower, range.upper]);
+
+    const minuteOptions = useMemo(
+        () => Array.from({ length: minuteRange.maxMinute - minuteRange.minMinute + 1 }, (_, index) => minuteRange.minMinute + index),
+        [minuteRange.maxMinute, minuteRange.minMinute],
+    );
 
     useEffect(() => {
         // Keep parent value in bounds when props change or value is out of range.
@@ -81,8 +128,18 @@ export function Timer({ maxTime, minTime, value, onChange, className }: TimerPro
         }
     }, [normalizedValue, onChange, rawValue, value]);
 
+    useEffect(() => {
+        // Keep draft synced to controlled value while picker is closed.
+        if (!open) {
+            setDraftValue(normalizedValue);
+        }
+    }, [normalizedValue, open]);
+
     const openPicker = () => {
         setDraftValue(normalizedValue);
+        setDraftHour(Math.floor(normalizedValue / 60));
+        setDraftMinute(normalizedValue % 60);
+        shouldAlignOnOpenRef.current = true;
         setOpen(true);
     };
 
@@ -95,8 +152,151 @@ export function Timer({ maxTime, minTime, value, onChange, className }: TimerPro
         closePicker();
     };
 
-    const adjustDraft = (delta: number) => {
-        setDraftValue((current) => clamp(current + delta, range.lower, range.upper));
+    useEffect(() => {
+        setDraftHour(Math.floor(draftValue / 60));
+        setDraftMinute(draftValue % 60);
+    }, [draftValue]);
+
+    useEffect(() => {
+        setDraftHour((current) => clamp(current, hourRange.minHour, hourRange.maxHour));
+    }, [hourRange.maxHour, hourRange.minHour]);
+
+    useEffect(() => {
+        setDraftMinute((current) => clamp(current, minuteRange.minMinute, minuteRange.maxMinute));
+    }, [minuteRange.maxMinute, minuteRange.minMinute]);
+
+    useEffect(() => {
+        setDraftValue(clamp(draftHour * 60 + draftMinute, range.lower, range.upper));
+    }, [draftHour, draftMinute, range.lower, range.upper]);
+
+    useEffect(() => {
+        if (!open || !shouldAlignOnOpenRef.current) {
+            return;
+        }
+
+        const alignToDraftValue = () => {
+            const hourIndex = hourOptions.indexOf(draftHour);
+            const minuteIndex = minuteOptions.indexOf(draftMinute);
+
+            if (hourListRef.current && hourIndex >= 0) {
+                hourListRef.current.scrollTop = hourIndex * ITEM_HEIGHT;
+            }
+
+            if (minuteListRef.current && minuteIndex >= 0) {
+                minuteListRef.current.scrollTop = minuteIndex * ITEM_HEIGHT;
+            }
+        };
+
+        isAligningOnOpenRef.current = true;
+        alignToDraftValue();
+        alignTimerRef.current = window.setTimeout(() => {
+            alignToDraftValue();
+            isAligningOnOpenRef.current = false;
+            alignTimerRef.current = null;
+        }, 80);
+
+        shouldAlignOnOpenRef.current = false;
+
+        return () => {
+            if (alignTimerRef.current !== null) {
+                window.clearTimeout(alignTimerRef.current);
+                alignTimerRef.current = null;
+            }
+            isAligningOnOpenRef.current = false;
+        };
+    }, [ITEM_HEIGHT, draftHour, draftMinute, hourOptions, minuteOptions, open]);
+
+    useEffect(() => {
+        if (!open || !minuteListRef.current) {
+            return;
+        }
+
+        const minuteIndex = minuteOptions.indexOf(draftMinute);
+        if (minuteIndex < 0) {
+            return;
+        }
+
+        minuteListRef.current.scrollTo({
+            top: minuteIndex * ITEM_HEIGHT,
+            behavior: "smooth",
+        });
+    }, [ITEM_HEIGHT, draftMinute, minuteOptions, open]);
+
+    useEffect(() => () => {
+        if (alignTimerRef.current !== null) {
+            window.clearTimeout(alignTimerRef.current);
+        }
+
+        if (hourScrollTimer.current !== null) {
+            window.clearTimeout(hourScrollTimer.current);
+        }
+
+        if (minuteScrollTimer.current !== null) {
+            window.clearTimeout(minuteScrollTimer.current);
+        }
+    }, []);
+
+    const snapToNearest = (container: HTMLDivElement, options: number[], setValue: (value: number) => void) => {
+        const index = clamp(Math.round(container.scrollTop / ITEM_HEIGHT), 0, options.length - 1);
+        const nextValue = options[index];
+        const targetTop = index * ITEM_HEIGHT;
+        const needSnap = Math.abs(container.scrollTop - targetTop) > 0.5;
+
+        if (needSnap) {
+            container.scrollTo({ top: targetTop, behavior: "smooth" });
+        }
+        setValue(nextValue);
+    };
+
+    const scrollToOption = (
+        container: HTMLDivElement | null,
+        options: number[],
+        selectedValue: number,
+        setValue: (value: number) => void,
+    ) => {
+        if (!container) {
+            return;
+        }
+
+        const index = options.indexOf(selectedValue);
+        if (index < 0) {
+            return;
+        }
+
+        container.scrollTo({ top: index * ITEM_HEIGHT, behavior: "smooth" });
+        setValue(selectedValue);
+    };
+
+    const handleHourScroll = (event: React.UIEvent<HTMLDivElement>) => {
+        if (isAligningOnOpenRef.current) {
+            return;
+        }
+
+        const container = event.currentTarget;
+
+        if (hourScrollTimer.current !== null) {
+            window.clearTimeout(hourScrollTimer.current);
+        }
+
+        hourScrollTimer.current = window.setTimeout(() => {
+            snapToNearest(container, hourOptions, setDraftHour);
+        }, SCROLL_END_DELAY);
+    };
+
+    const handleMinuteScroll = (event: React.UIEvent<HTMLDivElement>) => {
+        if (isAligningOnOpenRef.current) {
+            return;
+        }
+
+        const container = event.currentTarget;
+
+        if (minuteScrollTimer.current !== null) {
+            window.clearTimeout(minuteScrollTimer.current);
+        }
+
+        minuteScrollTimer.current = window.setTimeout(() => {
+            snapToNearest(container, minuteOptions, setDraftMinute);
+        }, SCROLL_END_DELAY);
     };
 
     return <>
@@ -113,20 +313,50 @@ export function Timer({ maxTime, minTime, value, onChange, className }: TimerPro
             >
                 <div className={styles.panel}>
                     <div className={styles.preview}>{formatHHMM(draftValue)}</div>
-                    <input
-                        className={styles.range}
-                        type="range"
-                        min={range.lower}
-                        max={range.upper}
-                        value={draftValue}
-                        onChange={(event) => setDraftValue(Number(event.target.value))}
-                    />
+                    <div
+                        className={styles.pickers}
+                        style={{
+                            ["--item-height" as string]: `${ITEM_HEIGHT}px`,
+                            ["--picker-height" as string]: `${ITEM_HEIGHT * VISIBLE_ROWS}px`,
+                        }}
+                    >
+                        <div className={styles.pickerColumn}>
+                            <div className={styles.pickerTitle}>时</div>
+                            <div className={styles.pickerList} ref={hourListRef} onScroll={handleHourScroll}>
+                                {hourOptions.map((hour) => (
+                                    <div
+                                        key={hour}
+                                        className={classNames(styles.pickerItem, {
+                                            [styles.active]: hour === draftHour,
+                                        })}
+                                        onClick={() => scrollToOption(hourListRef.current, hourOptions, hour, setDraftHour)}
+                                    >
+                                        {String(hour).padStart(2, "0")}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={styles.pickerColumn}>
+                            <div className={styles.pickerTitle}>分</div>
+                            <div className={styles.pickerList} ref={minuteListRef} onScroll={handleMinuteScroll}>
+                                {minuteOptions.map((minute) => (
+                                    <div
+                                        key={`${draftHour}-${minute}`}
+                                        className={classNames(styles.pickerItem, {
+                                            [styles.active]: minute === draftMinute,
+                                        })}
+                                        onClick={() => scrollToOption(minuteListRef.current, minuteOptions, minute, setDraftMinute)}
+                                    >
+                                        {String(minute).padStart(2, "0")}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className={styles.selectionFrame} aria-hidden="true" />
+                    </div>
                     <div className={styles.hint}>
                         {formatHHMM(range.lower)} - {formatHHMM(range.upper)}
-                    </div>
-                    <div className={styles.quickActions}>
-                        <button type="button" className={styles.quickButton} onClick={() => adjustDraft(-1)}>-1 min</button>
-                        <button type="button" className={styles.quickButton} onClick={() => adjustDraft(1)}>+1 min</button>
                     </div>
                 </div>
             </Modal>

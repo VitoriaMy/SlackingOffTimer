@@ -8,6 +8,13 @@ export type WorkSchedule = {
   dayOverrides?: Record<string, "work" | "rest">;
 };
 
+export type SlackSwitchState = 0 | 1;
+
+export type SlackingRecord = {
+  timestamp: number;
+  switchState: SlackSwitchState;
+};
+
 export type AppLanguage = "zh" | "en";
 
 export const defaultSchedule: WorkSchedule = {
