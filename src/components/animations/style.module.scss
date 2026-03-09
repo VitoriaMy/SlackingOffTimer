@@ -11,57 +11,48 @@
   color: var(--primary-color);
 }
 
-.waterWrapper {
+.water {
+  position: absolute;
+  left: 51.5%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 240%;
+}
+
+.waterDropWrapper {
   position: absolute;
   top: 50%;
-  bottom: 15%;
+  bottom: 28%;
   left: 0%;
   width: 100%;
 }
 
-@keyframes toBig {
-  0% {
-    width: 0%;
-  }
-  100% {
-    width: 22%;
-  }
-}
-
-@keyframes toDrop {
-  0% {
-    top: 0%;
-  }
-  100% {
-    top: 100%;
-  }
-}
-
-.water {
+.waterDrop {
   position: absolute;
   top: 0%;
   left: 51%;
-  transform: translateX(-51%);
+  transform: translateX(-50%);
   width: 0%;
+  --width: 26%;
   color: var(--primary-color);
   &.step1 {
-    // 执行一次动画，宽度从0%变为22%, 结束后保持在22%
-    animation: toBig 1s ease-out forwards;
+    width: var(--width);
+    transition: width 2s ease-out;
   }
   &.step2 {
-    width: 22%;
-    // 执行一次动画，top从0变为100%, 动画匀速
-    animation: toDrop 1.4s linear forwards;
+    width: var(--width);
+    top: 100%;
+    transition: top 1.4s linear;
   }
-  &.step0 {
-    width: 22%;
+  &.step3 {
+    width: var(--width);
     top: 100%;
   }
 }
 
 .fish {
   position: absolute;
-  bottom: 12%;
+  bottom: 6%;
   left: 50%;
   transform: translateX(-50%);
   width: 66%;

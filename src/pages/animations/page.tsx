@@ -1,5 +1,6 @@
-import { FishAnimation } from '@/components/animations/fish';
-import { WaterAnimation } from '@/components/animations/water';
+// import { FishAnimation } from '@/components/animations/fish';
+// import { WaterAnimation } from '@/components/animations/water';
+import { Animations } from '@/components/animations';
 import styles from './page.module.scss';
 
 export function AnimationsPage() {
@@ -10,8 +11,7 @@ export function AnimationsPage() {
         <hr /> */}
 
         <div className={styles.container}>
-            <WaterAnimation className={styles.water} />
-            <FishAnimation className={styles.fish} />
+            <Animations />
         </div>
     </div>
 
