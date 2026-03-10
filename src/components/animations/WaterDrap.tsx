@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DotLottieReact, DotLottie } from "@lottiefiles/dotlottie-react";
 import classNames from "classnames";
-import styles from "./style.module.scss";
+import styles from "./WaterDrap.module.scss";
 
 const stepTimes = {
   1: {
@@ -83,7 +83,7 @@ export function WaterDrapAnimation({ className, isRunning }: { className?: strin
       if (timeIdRef.current) {
         clearTimeout(timeIdRef.current);
       }
-      if(animationRef.current) {
+      if (animationRef.current) {
         animationRef.current.stop();
         animationRef.current.setFrame(34);
       }
@@ -93,16 +93,16 @@ export function WaterDrapAnimation({ className, isRunning }: { className?: strin
   }, [isReady, handleRunAnimation, isRunning]);
 
   return (
-    <div className={classNames(className, styles[`step${step}`])}>
-      <DotLottieReact
-        dotLottieRefCallback={handleLoad}
-        src="/animations/waterdrop.json"
-        autoplay={false}
-        loop={false}
-        renderConfig={{
-          wasmUrl: '/animations/dotlottie-player.wasm',
-        }}
-      />
+    <div className={classNames(styles.waterDropWrapper, className)}>
+      <div className={classNames(styles.waterDrop, styles[`step${step}`])}>
+        <DotLottieReact
+          dotLottieRefCallback={handleLoad}
+          src="/animations/waterdrop.json"
+          autoplay={false}
+          loop={false}
+        />
+      </div>
     </div>
+
   );
 }
