@@ -1,8 +1,9 @@
 import { Layout } from "@/components/layout";
 import styles from "./style.module.scss";
 import { useSettingsStore } from "@/store/settingsStore";
+import { useDaySwitchRecords } from "@/hooks/useDaySwitchRecords";
+import { useEffectiveScheduleByDate } from "@/hooks/useEffectiveScheduleByDate";
 import { useEffect, useMemo, useState } from "react";
-import type { WorkSchedule } from "../../../lib/types";
 
 function formatDayKey(date: Date): string {
     const yyyy = date.getFullYear();
@@ -36,36 +37,16 @@ function formatDate(timestamp: number): string {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-function getDayRangeByKey(dayKey: string): { start: number; end: number } | null {
-    const date = new Date(`${dayKey}T00:00:00`);
-    if (Number.isNaN(date.getTime())) {
-        return null;
-    }
-
-    const start = date.getTime();
-    const end = start + 24 * 60 * 60 * 1000 - 1;
-    return { start, end };
-}
-
 function formatScheduleSummary(startTime: string, endTime: string, lunchStart?: string, lunchEnd?: string): string {
     const lunchText = lunchStart && lunchEnd ? `${lunchStart}-${lunchEnd}` : "无";
     return `工作 ${startTime}-${endTime} / 午休 ${lunchText}`;
 }
-
-type SchedulePeriodItem = {
-    startAt: number | null;
-    endAt: number | null;
-    isCurrent: boolean;
-    schedule: WorkSchedule;
-};
 
 export function StautsPage() {
     const {
         configured,
         schedule,
         language,
-        slackingRecords,
-        scheduleHistory,
         reloadSlackingRecords,
         reloadScheduleHistory,
     } = useSettingsStore();
@@ -97,51 +78,8 @@ export function StautsPage() {
         }
     }, [activeDayKey, dateTabs]);
 
-    const recentSwitchRecords = useMemo(
-        () => [...slackingRecords].sort((a, b) => b.timestamp - a.timestamp),
-        [slackingRecords],
-    );
-
-    const activeDaySwitchRecords = useMemo(
-        () => recentSwitchRecords.filter((record) => formatDayKey(new Date(record.timestamp)) === activeDayKey),
-        [activeDayKey, recentSwitchRecords],
-    );
-
-    const schedulePeriods = useMemo<SchedulePeriodItem[]>(() => {
-        const sorted = [...scheduleHistory].sort((a, b) => a.savedAt - b.savedAt);
-
-        if (sorted.length === 0) {
-            return [{
-                startAt: null,
-                endAt: null,
-                isCurrent: true,
-                schedule,
-            }];
-        }
-
-        return sorted.map((item, index) => {
-            const next = sorted[index + 1];
-            return {
-                startAt: item.savedAt,
-                endAt: next ? next.savedAt : null,
-                isCurrent: !next,
-                schedule: item.schedule,
-            };
-        });
-    }, [schedule, scheduleHistory]);
-
-    const displayScheduleHistory = useMemo(() => {
-        const range = getDayRangeByKey(activeDayKey);
-        if (!range) {
-            return [] as SchedulePeriodItem[];
-        }
-
-        return schedulePeriods.filter((item) => {
-            const startAt = item.startAt ?? Number.NEGATIVE_INFINITY;
-            const endAt = item.endAt ?? Number.POSITIVE_INFINITY;
-            return startAt <= range.end && endAt >= range.start;
-        });
-    }, [activeDayKey, schedulePeriods]);
+    const { daySwitchRecords: activeDaySwitchRecords } = useDaySwitchRecords(activeDayKey);
+    const { effectiveScheduleForDay: effectiveScheduleForActiveDay } = useEffectiveScheduleByDate(activeDayKey);
 
     return <Layout
         header={{
@@ -187,29 +125,29 @@ export function StautsPage() {
         </div>
 
         <div className={styles.list}>
-            <div className={styles.tit}>最近七天设置</div>
+            <div className={styles.tit}>设置</div>
             <div className={styles.listContent}>
-                {displayScheduleHistory.length === 0 ? (
+                {!effectiveScheduleForActiveDay ? (
                     <div className={styles.empty}>暂无记录</div>
                 ) : (
-                    displayScheduleHistory.map((item, index) => (
-                        <div key={`${item.startAt ?? 0}-${item.endAt ?? 0}-${index}`} className={styles.liCol}>
-                            <div className={styles.liTop}>
-                                <span>{item.isCurrent ? "当前生效设置" : "历史设置"}</span>
-                                <span className={styles.tag}>{item.isCurrent ? "当前" : "保存"}</span>
-                            </div>
-                            <div className={styles.summary}>开始日期：{item.startAt ? formatDate(item.startAt) : "未记录"}</div>
-                            <div className={styles.summary}>结束日期：{item.isCurrent ? "--" : item.endAt ? formatDate(item.endAt) : "--"}</div>
-                            <div className={styles.summary}>
-                                {formatScheduleSummary(
-                                    item.schedule.startTime,
-                                    item.schedule.endTime,
-                                    item.schedule.lunchStart,
-                                    item.schedule.lunchEnd,
-                                )}
-                            </div>
+                    <div
+                        key={`${effectiveScheduleForActiveDay.startAt ?? 0}-${effectiveScheduleForActiveDay.endAt ?? 0}`}
+                        className={styles.liCol}
+                    >
+                        <div className={styles.liTop}>
+                            <span>{effectiveScheduleForActiveDay.isCurrent ? "当前生效设置" : "历史设置"}</span>
                         </div>
-                    ))
+                        <div className={styles.summary}>开始日期：{effectiveScheduleForActiveDay.startAt ? formatDate(effectiveScheduleForActiveDay.startAt) : "未记录"}</div>
+                        <div className={styles.summary}>结束日期：{effectiveScheduleForActiveDay.isCurrent ? "--" : effectiveScheduleForActiveDay.endAt ? formatDate(effectiveScheduleForActiveDay.endAt) : "--"}</div>
+                        <div className={styles.summary}>
+                            {formatScheduleSummary(
+                                effectiveScheduleForActiveDay.schedule.startTime,
+                                effectiveScheduleForActiveDay.schedule.endTime,
+                                effectiveScheduleForActiveDay.schedule.lunchStart,
+                                effectiveScheduleForActiveDay.schedule.lunchEnd,
+                            )}
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
