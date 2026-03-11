@@ -16,12 +16,12 @@ export function useSlackingStatsByDate(dateInput: DateInput) {
 
   const durationMs = useMemo(() => {
     const range = getDayRangeByKey(dayKey);
-    if (!range) {
+    if (!range || !effectiveScheduleForDay) {
       return 0;
     }
 
-    return computeDurationMsByRecords(daySwitchRecords, range);
-  }, [dayKey, daySwitchRecords]);
+    return computeDurationMsByRecords(daySwitchRecords, range, Date.now(), effectiveScheduleForDay.schedule);
+  }, [dayKey, daySwitchRecords, effectiveScheduleForDay]);
 
   const plannedWorkMs = useMemo(() => {
     if (!effectiveScheduleForDay) {

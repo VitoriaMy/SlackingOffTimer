@@ -38,8 +38,11 @@ export function useRecent7DaysSlackingStats() {
       const records = slackingRecords
         .filter((record) => formatDayKey(new Date(record.timestamp)) === dayKey);
 
-      const durationMs = range ? computeDurationMsByRecords(records, range) : 0;
       const effectiveScheduleForDay = range ? findEffectiveScheduleForRange(schedulePeriods, range) : null;
+      const durationMs =
+        range && effectiveScheduleForDay
+          ? computeDurationMsByRecords(records, range, Date.now(), effectiveScheduleForDay.schedule)
+          : 0;
       const plannedWorkMs = effectiveScheduleForDay ? getPlannedWorkMs(effectiveScheduleForDay.schedule) : 0;
       const ratio = toRatio(durationMs, plannedWorkMs);
 

@@ -12,6 +12,11 @@ export type EffectiveScheduleItem = {
   schedule: WorkSchedule;
 };
 
+type TimeRange = {
+  start: number;
+  end: number;
+};
+
 export function formatDayKey(date: Date): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, "0");
@@ -105,12 +110,51 @@ export function findEffectiveScheduleForRange(
   });
 }
 
+function resolveLunchRange(range: DayRange, schedule?: WorkSchedule): TimeRange | null {
+  if (!schedule?.lunchStart || !schedule?.lunchEnd) {
+    return null;
+  }
+
+  const base = new Date(range.start);
+  const [startHour, startMinute] = schedule.lunchStart.split(":").map(Number);
+  const [endHour, endMinute] = schedule.lunchEnd.split(":").map(Number);
+
+  const lunchStart = new Date(base);
+  lunchStart.setHours(startHour, startMinute, 0, 0);
+
+  const lunchEnd = new Date(base);
+  lunchEnd.setHours(endHour, endMinute, 0, 0);
+
+  const lunchRange: TimeRange = {
+    start: lunchStart.getTime(),
+    end: lunchEnd.getTime(),
+  };
+
+  if (lunchRange.end <= lunchRange.start) {
+    return null;
+  }
+
+  return lunchRange;
+}
+
+function computeSegmentDurationMs(segment: TimeRange, lunchRange: TimeRange | null): number {
+  const raw = Math.max(0, segment.end - segment.start);
+  if (!lunchRange || raw <= 0) {
+    return raw;
+  }
+
+  const overlap = Math.max(0, Math.min(segment.end, lunchRange.end) - Math.max(segment.start, lunchRange.start));
+  return Math.max(0, raw - overlap);
+}
+
 export function computeDurationMsByRecords(
   records: SlackingRecord[],
   range: DayRange,
   nowMs = Date.now(),
+  schedule?: WorkSchedule,
 ): number {
   const sortedRecords = [...records].sort((a, b) => a.timestamp - b.timestamp);
+  const lunchRange = resolveLunchRange(range, schedule);
 
   let total = 0;
   let activeStart: number | null = null;
@@ -124,14 +168,14 @@ export function computeDurationMsByRecords(
     }
 
     if (activeStart !== null) {
-      total += Math.max(0, record.timestamp - activeStart);
+      total += computeSegmentDurationMs({ start: activeStart, end: record.timestamp }, lunchRange);
       activeStart = null;
     }
   }
 
   if (activeStart !== null) {
     const endBoundary = nowMs >= range.start && nowMs <= range.end ? nowMs : range.end;
-    total += Math.max(0, endBoundary - activeStart);
+    total += computeSegmentDurationMs({ start: activeStart, end: endBoundary }, lunchRange);
   }
 
   return total;

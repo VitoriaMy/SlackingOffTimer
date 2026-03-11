@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
+import { computeDurationMsByRecords, formatDayKey, getDayRangeByKey } from "./slackingStatsUtils";
 
 const DEFAULT_TICK_MS = 1000;
 
@@ -19,7 +20,7 @@ function getStartOfTodayMs(nowMs: number): number {
 }
 
 export function useCurrentSlackingDuration(tickMs = DEFAULT_TICK_MS) {
-  const { slackingRecords } = useSettingsStore();
+  const { slackingRecords, schedule } = useSettingsStore();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -36,29 +37,14 @@ export function useCurrentSlackingDuration(tickMs = DEFAULT_TICK_MS) {
     const dayStartMs = getStartOfTodayMs(nowMs);
     const records = slackingRecords.filter((record) => record.timestamp >= dayStartMs && record.timestamp <= nowMs);
 
-    let total = 0;
-    let activeStart: number | null = null;
-
-    for (const record of records) {
-      if (record.switchState === 1) {
-        if (activeStart === null) {
-          activeStart = record.timestamp;
-        }
-        continue;
-      }
-
-      if (activeStart !== null) {
-        total += Math.max(0, record.timestamp - activeStart);
-        activeStart = null;
-      }
+    const dayKey = formatDayKey(new Date(nowMs));
+    const range = getDayRangeByKey(dayKey);
+    if (!range) {
+      return 0;
     }
 
-    if (activeStart !== null) {
-      total += Math.max(0, nowMs - activeStart);
-    }
-
-    return total;
-  }, [nowMs, slackingRecords]);
+    return computeDurationMsByRecords(records, range, nowMs, schedule);
+  }, [nowMs, schedule, slackingRecords]);
 
   return {
     durationMs,
