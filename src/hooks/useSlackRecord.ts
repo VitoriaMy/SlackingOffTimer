@@ -1,21 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSettingsStore } from "@/store/settingsStore";
+import { getWorkSegmentId } from "@/schedule";
 import type { SlackSwitchState } from "../../lib/types";
 
-function toMinutes(hhmm: string): number {
-  const [hour, minute] = hhmm.split(":").map(Number);
-  return hour * 60 + minute;
-}
-
-function getTodayBoundaryTimestamp(now: Date, hhmm: string): number {
-  const minutes = toMinutes(hhmm);
-  const hour = Math.floor(minutes / 60);
-  const minute = minutes % 60;
-
-  const point = new Date(now);
-  point.setHours(hour, minute, 0, 0);
-  return point.getTime();
-}
+const SWITCH_STATE_TICK_MS = 30 * 1000;
 
 /**
  * 用于记录 Slack 开关状态的 Hook。它会在组件首次挂载时从 localStorage 加载历史记录，并提供一个函数用于添加新的记录。
@@ -25,6 +13,7 @@ function getTodayBoundaryTimestamp(now: Date, hhmm: string): number {
 export function useSlackRecord() {
   const { addSlackingRecord, reloadSlackingRecords, slackingRecords, schedule } = useSettingsStore();
   const initializedRef = useRef(false);
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   useEffect(() => {
     if (initializedRef.current) {
@@ -36,29 +25,32 @@ export function useSlackRecord() {
     reloadSlackingRecords();
   }, [reloadSlackingRecords]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, SWITCH_STATE_TICK_MS);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
   const currentSwitchState = useMemo<SlackSwitchState>(() => {
-    const lastRecord = slackingRecords[slackingRecords.length - 1];
-    if (!lastRecord) {
+    const currentSegmentId = getWorkSegmentId(new Date(nowMs), schedule);
+    if (!currentSegmentId) {
       return 0;
     }
 
-    const now = new Date();
-    const nowMs = now.getTime();
-    const workStartMs = getTodayBoundaryTimestamp(now, schedule.startTime);
-
-    if (lastRecord.timestamp < workStartMs) {
-      return 0;
-    }
-
-    if (schedule.lunchStart) {
-      const lunchStartMs = getTodayBoundaryTimestamp(now, schedule.lunchStart);
-      if (nowMs >= lunchStartMs && lastRecord.timestamp < lunchStartMs) {
-        return 0;
+    for (let index = slackingRecords.length - 1; index >= 0; index -= 1) {
+      const record = slackingRecords[index];
+      const recordSegmentId = getWorkSegmentId(new Date(record.timestamp), schedule);
+      if (recordSegmentId === currentSegmentId) {
+        return record.switchState;
       }
     }
 
-    return lastRecord.switchState;
-  }, [schedule.lunchStart, schedule.startTime, slackingRecords]);
+    return 0;
+  }, [nowMs, schedule, slackingRecords]);
 
   const recordSlackSwitch = useCallback(() => {
     const nextSwitchState: SlackSwitchState = currentSwitchState === 1 ? 0 : 1;

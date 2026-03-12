@@ -137,13 +137,66 @@ function resolveLunchRange(range: DayRange, schedule?: WorkSchedule): TimeRange 
   return lunchRange;
 }
 
-function computeSegmentDurationMs(segment: TimeRange, lunchRange: TimeRange | null): number {
-  const raw = Math.max(0, segment.end - segment.start);
+function resolveWorkRange(range: DayRange, schedule?: WorkSchedule): TimeRange | null {
+  if (!schedule) {
+    return null;
+  }
+
+  const base = new Date(range.start);
+  const [startHour, startMinute] = schedule.startTime.split(":").map(Number);
+  const [endHour, endMinute] = schedule.endTime.split(":").map(Number);
+
+  const workStart = new Date(base);
+  workStart.setHours(startHour, startMinute, 0, 0);
+
+  const workEnd = new Date(base);
+  workEnd.setHours(endHour, endMinute, 0, 0);
+
+  const workRange: TimeRange = {
+    start: workStart.getTime(),
+    end: workEnd.getTime(),
+  };
+
+  if (workRange.end <= workRange.start) {
+    return null;
+  }
+
+  return workRange;
+}
+
+function isTimestampInEffectiveWorkRange(
+  timestamp: number,
+  workRange: TimeRange | null,
+  lunchRange: TimeRange | null,
+): boolean {
+  if (!workRange) {
+    return true;
+  }
+
+  if (timestamp < workRange.start || timestamp >= workRange.end) {
+    return false;
+  }
+
+  if (!lunchRange) {
+    return true;
+  }
+
+  return timestamp < lunchRange.start || timestamp >= lunchRange.end;
+}
+
+function computeSegmentDurationMs(
+  segment: TimeRange,
+  lunchRange: TimeRange | null,
+  workRange: TimeRange | null,
+): number {
+  const clampedStart = workRange ? Math.max(segment.start, workRange.start) : segment.start;
+  const clampedEnd = workRange ? Math.min(segment.end, workRange.end) : segment.end;
+  const raw = Math.max(0, clampedEnd - clampedStart);
   if (!lunchRange || raw <= 0) {
     return raw;
   }
 
-  const overlap = Math.max(0, Math.min(segment.end, lunchRange.end) - Math.max(segment.start, lunchRange.start));
+  const overlap = Math.max(0, Math.min(clampedEnd, lunchRange.end) - Math.max(clampedStart, lunchRange.start));
   return Math.max(0, raw - overlap);
 }
 
@@ -155,11 +208,16 @@ export function computeDurationMsByRecords(
 ): number {
   const sortedRecords = [...records].sort((a, b) => a.timestamp - b.timestamp);
   const lunchRange = resolveLunchRange(range, schedule);
+  const workRange = resolveWorkRange(range, schedule);
 
   let total = 0;
   let activeStart: number | null = null;
 
   for (const record of sortedRecords) {
+    if (!isTimestampInEffectiveWorkRange(record.timestamp, workRange, lunchRange)) {
+      continue;
+    }
+
     if (record.switchState === 1) {
       if (activeStart === null) {
         activeStart = record.timestamp;
@@ -168,14 +226,14 @@ export function computeDurationMsByRecords(
     }
 
     if (activeStart !== null) {
-      total += computeSegmentDurationMs({ start: activeStart, end: record.timestamp }, lunchRange);
+      total += computeSegmentDurationMs({ start: activeStart, end: record.timestamp }, lunchRange, workRange);
       activeStart = null;
     }
   }
 
   if (activeStart !== null) {
     const endBoundary = nowMs >= range.start && nowMs <= range.end ? nowMs : range.end;
-    total += computeSegmentDurationMs({ start: activeStart, end: endBoundary }, lunchRange);
+    total += computeSegmentDurationMs({ start: activeStart, end: endBoundary }, lunchRange, workRange);
   }
 
   return total;
