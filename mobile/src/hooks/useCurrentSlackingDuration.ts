@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { AppLanguage } from "@/src/core/types";
-import { computeDurationMsByRecords, formatDayKey, getDayRangeByKey } from "@/src/hooks/slackingStatsUtils";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { AppLanguage } from "@/core/types";
+import { computeDurationMsByRecords, formatDayKey, getDayRangeByKey } from "@/hooks/slackingStatsUtils";
+import { useSettingsStore } from "@/store/settingsStore";
 
 const DEFAULT_TICK_MS = 1000;
 

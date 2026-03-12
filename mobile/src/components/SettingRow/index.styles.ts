@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
-import { rfs, rs } from "@/src/core/responsive";
-import { theme } from "@/src/core/theme";
+import { rfs, rs } from "@/core/responsive";
+import { theme } from "@/core/theme";
 
 const styles = StyleSheet.create({
   row: {

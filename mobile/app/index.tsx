@@ -3,15 +3,15 @@ import { useEffect, useMemo } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { PageLayout } from "@/src/components/layout";
-import { WaterAnimation } from "@/src/components/animations/Water";
-import { t } from "@/src/core/text";
-import { rfs, rs } from "@/src/core/responsive";
-import { theme } from "@/src/core/theme";
-import { isWorkWindow } from "@/src/core/time";
-import { useCurrentSlackingDuration } from "@/src/hooks/useCurrentSlackingDuration";
-import { useSlackRecord } from "@/src/hooks/useSlackRecord";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { PageLayout } from "@/components/layout";
+import { WaterAnimation } from "@/components/animations/Water";
+import { t } from "@/core/text";
+import { rfs, rs } from "@/core/responsive";
+import { theme } from "@/core/theme";
+import { isWorkWindow } from "@/core/time";
+import { useCurrentSlackingDuration } from "@/hooks/useCurrentSlackingDuration";
+import { useSlackRecord } from "@/hooks/useSlackRecord";
+import { useSettingsStore } from "@/store/settingsStore";
 import styles from "./index.styles";
 
 export default function HomePage() {
@@ -25,7 +25,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && !configured) {
-      router.replace("/(tabs)/settings");
+      router.replace("/settings");
     }
   }, [configured, loading, router]);
 
@@ -54,11 +54,11 @@ export default function HomePage() {
   return (
     <PageLayout
       leftAction={{
-        onPress: () => router.push("/(tabs)/trends"),
+        onPress: () => router.push("/trends"),
         children: <Ionicons name="stats-chart" size={rfs(20)} color={theme.colors.primary} />,
       }}
       rightAction={{
-        onPress: () => router.push("/(tabs)/settings"),
+        onPress: () => router.push("/settings"),
         children: <Ionicons name="settings" size={rfs(20)} color={theme.colors.primary} />,
       }}
       showBack={false}
@@ -71,7 +71,7 @@ export default function HomePage() {
           <Text style={styles.statusText}>{workNow ? text.home.inWorkTime : text.home.outWorkTime}</Text>
 
           <View style={styles.quickActions}>
-            <Pressable style={styles.quickButton} onPress={() => router.push("/(tabs)/status")}> 
+            <Pressable style={styles.quickButton} onPress={() => router.push("/status")}>
               <Ionicons name="pulse" size={rfs(16)} color={theme.colors.primary} />
               <Text style={styles.quickButtonText}>{text.tabs.status}</Text>
             </Pressable>

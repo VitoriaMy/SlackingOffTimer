@@ -1,4 +1,4 @@
-import { WorkSchedule } from "@/src/core/types";
+import { WorkSchedule } from "@/core/types";
 
 const toMinutes = (hhmm: string): number => {
   const [hour, minute] = hhmm.split(":").map(Number);

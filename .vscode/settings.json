@@ -1,3 +1,24 @@
 {
-    "svg.preview.background": "dark-transparent"
+    "svg.preview.background": "dark-transparent",
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/node_modules/**": true,
+        "**/dist/**": true,
+        "**/.expo/**": true,
+        "**/mobile/.expo/**": true,
+        "**/android/**": true,
+        "**/ios/**": true,
+        "**/coverage/**": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/.expo": true,
+        "**/android": true,
+        "**/ios": true,
+        "**/coverage": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        "npx tsc": true
+    }
 }

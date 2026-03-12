@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { useSettingsStore } from "@/store/settingsStore";
 import {
   buildSchedulePeriods,
   computeDurationMsByRecords,
@@ -11,7 +11,7 @@ import {
   getPlannedWorkMs,
   toRatio,
   type EffectiveScheduleItem,
-} from "@/src/hooks/slackingStatsUtils";
+} from "@/hooks/slackingStatsUtils";
 
 type DailySlackingStats = {
   day: string;

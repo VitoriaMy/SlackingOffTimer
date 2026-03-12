@@ -1,11 +1,11 @@
 import { View } from "react-native";
-import { MetricCard } from "@/src/components/Card";
-import { TrendChart } from "@/src/components/Chart";
-import { PageLayout } from "@/src/components/layout";
-import { t } from "@/src/core/text";
-import { useRecent7DaysSlackingStats } from "@/src/hooks/useRecent7DaysSlackingStats";
-import { formatPercent } from "@/src/hooks/slackingStatsUtils";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { MetricCard } from "@/components/Card";
+import { TrendChart } from "@/components/Chart";
+import { PageLayout } from "@/components/layout";
+import { t } from "@/core/text";
+import { useRecent7DaysSlackingStats } from "@/hooks/useRecent7DaysSlackingStats";
+import { formatPercent } from "@/hooks/slackingStatsUtils";
+import { useSettingsStore } from "@/store/settingsStore";
 import styles from "./trends.styles";
 
 export default function TrendsPage() {

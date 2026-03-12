@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { PageLayout } from "@/src/components/layout";
-import { t } from "@/src/core/text";
+import { PageLayout } from "@/components/layout";
+import { t } from "@/core/text";
 import {
   buildSchedulePeriods,
   findEffectiveScheduleForRange,
@@ -10,8 +10,8 @@ import {
   formatDayKey,
   formatDayLabel,
   getDayRangeByKey,
-} from "@/src/hooks/slackingStatsUtils";
-import { useSettingsStore } from "@/src/store/settingsStore";
+} from "@/hooks/slackingStatsUtils";
+import { useSettingsStore } from "@/store/settingsStore";
 import styles from "./status.styles";
 
 function formatScheduleSummary(startTime: string, endTime: string, lunchStart?: string, lunchEnd?: string): string {

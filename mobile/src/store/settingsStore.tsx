@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { normalizeSchedule } from "@/src/core/schedule";
+import { normalizeSchedule } from "@/core/schedule";
 import {
   AppLanguage,
   defaultSchedule,
@@ -7,12 +7,12 @@ import {
   SlackingRecord,
   SlackSwitchState,
   WorkSchedule,
-} from "@/src/core/types";
+} from "@/core/types";
 import {
   keepRecent7DaysRecords,
   keepRecent7DaysScheduleHistory,
   nativeStorage,
-} from "@/src/storage/storage.native";
+} from "@/storage/storage.native";
 
 type SettingsStoreValue = {
   loading: boolean;

@@ -5,7 +5,7 @@ const config = getDefaultConfig(__dirname);
 
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
-  "@": path.resolve(__dirname),
+  "@": path.resolve(__dirname, "src"),
 };
 
 module.exports = config;

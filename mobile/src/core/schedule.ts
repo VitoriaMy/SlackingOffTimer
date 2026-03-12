@@ -1,5 +1,5 @@
-import { AppLanguage, WorkSchedule } from "@/src/core/types";
-import { isWorkDate } from "@/src/core/time";
+import { AppLanguage, WorkSchedule } from "@/core/types";
+import { isWorkDate } from "@/core/time";
 
 export const dateKey = (date: Date): string => {
   const year = date.getFullYear();

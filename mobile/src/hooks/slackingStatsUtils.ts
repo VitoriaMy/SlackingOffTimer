@@ -1,4 +1,4 @@
-import type { AppLanguage, ScheduleHistoryRecord, SlackingRecord, WorkSchedule } from "@/src/core/types";
+import type { AppLanguage, ScheduleHistoryRecord, SlackingRecord, WorkSchedule } from "@/core/types";
 
 const toLocale = (language: AppLanguage): string => (language === "zh" ? "zh-CN" : "en-US");
 

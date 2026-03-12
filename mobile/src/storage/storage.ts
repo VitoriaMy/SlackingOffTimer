@@ -1,4 +1,4 @@
-import { AppLanguage, ScheduleHistoryRecord, SlackingRecord, WorkSchedule } from "@/src/core/types";
+import { AppLanguage, ScheduleHistoryRecord, SlackingRecord, WorkSchedule } from "@/core/types";
 
 export interface AppStorage {
   loadSchedule(): Promise<WorkSchedule>;

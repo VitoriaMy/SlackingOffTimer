@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
-import { SlackSwitchState } from "@/src/core/types";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { SlackSwitchState } from "@/core/types";
+import { useSettingsStore } from "@/store/settingsStore";
 
 function toMinutes(hhmm: string): number {
   const [hour, minute] = hhmm.split(":").map(Number);

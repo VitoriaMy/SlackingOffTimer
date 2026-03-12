@@ -5,8 +5,8 @@ import {
   ScheduleHistoryRecord,
   SlackingRecord,
   WorkSchedule,
-} from "@/src/core/types";
-import { AppStorage } from "@/src/storage/storage";
+} from "@/core/types";
+import { AppStorage } from "@/storage/storage";
 
 const scheduleKey = "slacking_schedule";
 const configuredKey = "slacking_configured";

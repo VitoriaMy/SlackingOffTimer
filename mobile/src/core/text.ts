@@ -1,4 +1,4 @@
-import { AppLanguage } from "@/src/core/types";
+import { AppLanguage } from "@/core/types";
 
 export const TEXT = {
   zh: {

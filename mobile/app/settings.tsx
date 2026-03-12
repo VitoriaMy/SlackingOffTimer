@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Platform, Pressable, Text, View } from "react-native";
-import { MoodSwitch } from "@/src/components/MoodSwitch";
-import { SettingRow } from "@/src/components/SettingRow";
-import { PageLayout } from "@/src/components/layout";
-import { validateSchedule } from "@/src/core/schedule";
-import { t } from "@/src/core/text";
-import { WorkSchedule } from "@/src/core/types";
-import { useSettingsStore } from "@/src/store/settingsStore";
+import { MoodSwitch } from "@/components/MoodSwitch";
+import { SettingRow } from "@/components/SettingRow";
+import { PageLayout } from "@/components/layout";
+import { validateSchedule } from "@/core/schedule";
+import { t } from "@/core/text";
+import { WorkSchedule } from "@/core/types";
+import { useSettingsStore } from "@/store/settingsStore";
 import styles from "./settings.styles";
 
 const WEEKDAY_OPTIONS = [1, 2, 3, 4, 5, 6, 0] as const;
