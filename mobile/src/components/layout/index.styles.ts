@@ -3,42 +3,49 @@ import { rfs, rs } from "@/core/responsive";
 import { theme } from "@/core/theme";
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContent: {
-    paddingHorizontal: rs(20),
-    paddingBottom: rs(20),
-    gap: rs(14),
+  page: {
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
+    paddingHorizontal: rs(32),
+    paddingBottom: rs(24),
+
+
+
   },
   header: {
-    height: rs(44),
-    position: "relative",
-    justifyContent: "center",
+    display: "flex",
     alignItems: "center",
+    justifyContent: "center",
+    height: rs(44),
+    color: theme.colors.primary,
+    position: "relative",
   },
   navLink: {
     position: "absolute",
     top: "50%",
-    width: rs(28),
-    height: rs(28),
-    marginTop: -rs(14),
+    transform: [{ translateY: '-50%' }],
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    width: rs(28),
+    height: rs(28),
+    fontSize: rfs(22),
+    color: theme.colors.primary,
   },
-  headerLeft: {
+  left: {
     left: 0,
   },
-  headerRight: {
+  right: {
     right: 0,
   },
   headerTitle: {
     fontSize: rfs(18),
-    color: theme.colors.primary,
     fontWeight: "600",
-    letterSpacing: 0.4,
-  },
+    textAlign: "center",
+  }
+
 });
 
 export default styles;

@@ -1,34 +1,62 @@
-import { Text, View } from "react-native";
-import styles from "./index.styles";
+import styles from "./index.style";
+import { View, Text } from "react-native";
 
-type ChartItem = {
-  day: string;
-  time: string;
-  ratio: number;
-};
 
-type TrendChartProps = {
+/**
+ *  展示对应天的工作时长占比柱状中的柱子
+ * @param day -6 ~ 0 其中0代表今天，-1代表昨天，以此类推 
+ * @returns 
+ */
+function ChartBar({ item }: {
+  item: {
+    day: string;
+    time: string;
+    ratio: number;
+  };
+}) {
+
+  return <View style={styles.chartItem}>
+    <View
+      style={[styles.chartItemTime, {
+        height: `${item.ratio}%`,
+      }]}
+    >
+      <View style={styles.time}>
+        <Text style={styles.timeText}>{item.time}</Text>
+      </View>
+      <View style={styles.day}>
+        <Text style={styles.dayText}>{item.day}</Text>
+      </View>
+    </View>
+  </View>
+}
+
+
+interface ChartProps {
   title: string;
-  d7: ChartItem[];
-};
+  d7: {
+    day: string;
+    time: string;
+    ratio: number;
+  }[];
+}
 
-export function TrendChart({ title, d7 }: TrendChartProps) {
+export function Chart({ title, d7 }: ChartProps) {
   return (
     <View style={styles.chart}>
-      <Text style={styles.title}>{title}</Text>
-      <View style={styles.barsWrap}>
-        <View style={styles.bars}>
+      <View style={styles.chartTitle}>
+        <Text style={styles.chartTitleText}>{title}</Text>
+      </View>
+      <View style={styles.chartContent}>
+        <View style={styles.chartBars}>
           {d7.map((item) => (
-            <View style={styles.barItem} key={`${item.day}-${item.time}`}>
-              <View style={[styles.bar, { height: `${item.ratio}%` }]}>
-                <Text style={styles.time}>{item.time}</Text>
-                <Text style={styles.day}>{item.day}</Text>
-              </View>
-            </View>
+            <ChartBar key={item.day} item={item} />
           ))}
         </View>
-        <View style={styles.axis}>
-          <Text style={styles.unit}>日</Text>
+        <View style={styles.chartAxis}>
+          <View style={styles.unit}>
+            <Text style={styles.unitText}>日</Text>
+          </View>
         </View>
       </View>
     </View>
