@@ -1,4 +1,4 @@
-import { RiveAnimation } from '@/components/riveAnimation';
+// import { RiveAnimation } from '@/components/riveAnimation';
 import styles from './page.module.scss';
 import { useState } from 'react';
 import { Layout } from '@/components/layout';
@@ -13,11 +13,12 @@ export function AnimationsPage() {
     >
         <div className={styles.container}>
 
+123123123
             {/* <Dotlottie /> */}
 
             {/* <hr /> */}
 
-            <RiveAnimation />
+            {/* <RiveAnimation /> */}
 
         </div>
 

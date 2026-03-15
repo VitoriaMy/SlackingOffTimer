@@ -1,6 +1,6 @@
 import { FishAnimation } from "./fish";
 import { WaterDrapAnimation } from "./WaterDrap";
-import { WaterAnimation } from "./Water";
+// import { WaterAnimation } from "./Water";
 import styles from "./style.module.scss";
 import { useMemo } from "react";
 import classNames from "classnames";
@@ -30,7 +30,7 @@ export function Animations({
 
   return (
     <div className={classNames(styles.container, className)}>
-      <WaterAnimation className={styles.water} stage={stage} />
+      {/* <WaterAnimation className={styles.water} stage={stage} /> */}
       <FishAnimation className={classNames(styles.fish, styles[`stage_${stage}`])} />
       <WaterDrapAnimation className={classNames(styles.waterDropWrapper, styles[`stage_${stage}`])} isRunning={isRunning} />
     </div>
