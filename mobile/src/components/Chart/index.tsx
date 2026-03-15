@@ -1,5 +1,16 @@
-import styles from "./index.style";
+import { memo, useMemo } from "react";
 import { View, Text } from "react-native";
+import styles from "./index.style";
+
+type ChartItem = {
+  day: string;
+  time: string;
+  ratio: number;
+};
+
+function clampRatio(ratio: number): number {
+  return Math.max(0, Math.min(100, ratio));
+}
 
 
 /**
@@ -7,38 +18,27 @@ import { View, Text } from "react-native";
  * @param day -6 ~ 0 其中0代表今天，-1代表昨天，以此类推 
  * @returns 
  */
-function ChartBar({ item }: {
-  item: {
-    day: string;
-    time: string;
-    ratio: number;
-  };
-}) {
+const ChartBar = memo(function ChartBar({ item }: { item: ChartItem }) {
+  const barHeight = useMemo(() => ({ height: `${clampRatio(item.ratio)}%` as const }), [item.ratio]);
 
-  return <View style={styles.chartItem}>
-    <View
-      style={[styles.chartItemTime, {
-        height: `${item.ratio}%`,
-      }]}
-    >
-      <View style={styles.time}>
-        <Text style={styles.timeText}>{item.time}</Text>
-      </View>
-      <View style={styles.day}>
-        <Text style={styles.dayText}>{item.day}</Text>
+  return (
+    <View style={styles.chartItem}>
+      <View style={[styles.chartItemBar, barHeight]}>
+        <View style={styles.time}>
+          <Text style={styles.timeText}>{item.time}</Text>
+        </View>
+        <View style={styles.day}>
+          <Text style={styles.dayText}>{item.day}</Text>
+        </View>
       </View>
     </View>
-  </View>
-}
+  );
+});
 
 
 interface ChartProps {
   title: string;
-  d7: {
-    day: string;
-    time: string;
-    ratio: number;
-  }[];
+  d7: ChartItem[];
 }
 
 export function Chart({ title, d7 }: ChartProps) {

@@ -1,0 +1,28 @@
+.switch {
+    display: block;
+    width: 37px;
+    height: 20px;
+    position: relative;
+    color: var(--font-color);
+}
+
+.lineIcon {
+    width: 100%;
+}
+
+.faceIcon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 20px;
+    transform: translate(-50%, 0);
+}
+
+.checked {
+    color: var(--primary-color);
+    .faceIcon {
+        left: unset;
+        right: 0;
+        transform: translate(50%, 0);
+    }
+}

@@ -3,10 +3,6 @@ import { rs } from "@/core/responsive";
 import { theme } from "@/core/theme";
 
 const styles = StyleSheet.create({
-  container: {
-    gap: rs(18),
-    paddingTop: rs(6),
-  },
   cards: {
     flexDirection: "row",
     justifyContent: "space-between",
