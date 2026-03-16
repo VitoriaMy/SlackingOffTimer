@@ -6,6 +6,7 @@ const config = getDefaultConfig(__dirname);
 config.resolver.alias = {
   ...(config.resolver.alias || {}),
   "@": path.resolve(__dirname, "src"),
+  "~": path.resolve(__dirname, "assets"),
 };
 
 module.exports = config;

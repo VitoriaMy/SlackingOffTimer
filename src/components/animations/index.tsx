@@ -1,6 +1,6 @@
 import { FishAnimation } from "./fish";
-import { WaterDrapAnimation } from "./WaterDrap";
-// import { WaterAnimation } from "./Water";
+import { WaterDrapAnimation } from "./waterDrap";
+import { WaterAnimation } from "./water";
 import styles from "./style.module.scss";
 import { useMemo } from "react";
 import classNames from "classnames";

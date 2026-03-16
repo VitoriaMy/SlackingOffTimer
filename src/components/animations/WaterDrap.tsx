@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { DotLottieReact, DotLottie } from "@lottiefiles/dotlottie-react";
 import classNames from "classnames";
-import styles from "./WaterDrap.module.scss";
+import styles from "./waterDrap.module.scss";
 
 const stepTimes = {
   1: {

@@ -3,6 +3,7 @@ import { Layout } from "@/components/layout";
 import { rs } from "@/core/responsive";
 import DevNav from "./_devNav";
 import { StatusCard } from "@/components/statusCard";
+import { Animations } from "@/components/animations";
 
 // 当前运行环境变量是开发环境还是生产环境
 const isDev = __DEV__;
@@ -24,6 +25,7 @@ export default function HomePage() {
       }}
     >
       <StatusCard />
+      <Animations />
       {isDev ? <DevNav /> : null}
     </Layout>
   );

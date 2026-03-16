@@ -1,5 +1,5 @@
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import styles from "./Water.module.scss";
+import styles from "./water.module.scss";
 import { useMemo } from "react";
 import classNames from "classnames";
 
