@@ -1,18 +1,19 @@
 import { StyleSheet } from "react-native";
+import { theme } from "@/core/theme";
 
 export default StyleSheet.create({
   waterDropWrapper: {
     position: "absolute",
-    top: "50%",
+    top: "46%",
     bottom: "28%",
-    left: "-2%",
-    width: "100%",
+    left: "14%",
+    width: "72%",
   },
   stage_1: {
-    bottom: "21%",
+    bottom: "22%",
   },
   stage_2: {
-    bottom: "26%",
+    bottom: "26.5%",
   },
   stage_3: {
     bottom: "31%",
@@ -27,45 +28,32 @@ export default StyleSheet.create({
     display: "none",
   },
 
-  //   .waterDrop {
-  //     position: absolute;
-  //     top: 0%;
-  //     left: 51%;
-  //     transform: translateX(-50%);
-  //     width: 0%;
-  //     --width: 26%;
-  //     color: var(--primary-color);
-  //     &.step1 {
-  //         width: var(--width);
-  //         transition: width 2s ease-out;
-  //     }
-  //     &.step2 {
-  //         width: var(--width);
-  //         top: 100%;
-  //         transition: top 1.4s linear;
-  //     }
-  //     &.step3 {
-  //         width: var(--width);
-  //         top: 100%;
-  //     }
-  // }
-
   waterDrop: {
     position: "absolute",
     top: 0,
-    left: "51%",
-    transform: [{ translateX: "-50%" }],
-    width: 0,
-    color: "var(--primary-color)",
+    left: 0,
+    width: "100%",
+    height: 20,
   },
-  step1: {
-    width: 0,
+  waterDropInner: {
+    position: "absolute",
+    top: 0,
+    left: "24%",
+    width: "50%",
+    aspectRatio: 1,
+    transformOrigin: "top center",
+    overflow: "hidden",
   },
-  step2: {
-    width: "26%",
-  },
-  step3: {
-    width: "26%",
-    top: "100%",
+  waterDropAnimation: {
+    position:"absolute",
+    top: '0%',
+    left: '50%',
+    transformOrigin: "center",
+    transform: [
+      { translateX: '-50%' },
+      { translateY: '-14%' },
+    ],
+    width: "220%",
+    height: "40%",
   },
 });

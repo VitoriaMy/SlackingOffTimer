@@ -8,7 +8,7 @@ import styles from "./index.style";
 
 export function Animations({
   isRunning = true,
-  progress = 30,
+  progress = 14,
 }: {
   isRunning?: boolean;
   progress?: number;

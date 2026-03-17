@@ -4,11 +4,11 @@ import waterDropAnimation from "~/animations/waterdrop.json";
 import { UniversalLottie } from "./UniversalLottie";
 import styles from "./waterDrap.style";
 import type { AnimationStage } from "./types";
+import { rs } from "@/core/responsive";
 
 type DropPhase = 1 | 2 | 3;
 
-const GROW_DURATION = 1000;
-const FALL_DURATION = 1400;
+// const sta
 
 export function WaterDrapAnimation({
   isRunning = true,
@@ -21,83 +21,70 @@ export function WaterDrapAnimation({
   const [playSerial, setPlaySerial] = useState(0);
   const [wrapperSize, setWrapperSize] = useState({ width: 0, height: 0 });
 
-  const scale = useRef(new Animated.Value(0.01)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0)).current;
+  const offsetY = useRef(new Animated.Value(0)).current;
   const activeAnimationRef = useRef<Animated.CompositeAnimation | null>(null);
 
-  const targetWidth = Math.max(wrapperSize.width * 0.26, 1);
-  const targetTop = Math.max(wrapperSize.height, 1);
-  const leftOffset = wrapperSize.width * 0.37;
-
-  const resetDrop = useCallback(() => {
-    activeAnimationRef.current?.stop();
-    scale.setValue(0.01);
-    translateY.setValue(0);
-    setPhase(1);
-  }, [scale, translateY]);
-
-  const runPhase2 = useCallback(() => {
-    setPhase(2);
-    const fall = Animated.timing(translateY, {
-      toValue: targetTop,
-      duration: FALL_DURATION,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    });
-
-    activeAnimationRef.current = fall;
-    fall.start(({ finished }) => {
-      if (finished && isRunning) {
-        setPhase(3);
-        setPlaySerial((v) => v + 1);
-      }
-    });
-  }, [isRunning, targetTop, translateY]);
-
-  const runPhase1 = useCallback(() => {
-    setPhase(1);
-    translateY.setValue(0);
-    scale.setValue(0.01);
-
-    const grow = Animated.timing(scale, {
+  const phase_1 = () => {
+    scale.setValue(0);
+    offsetY.setValue(0);
+    const widthAnim = Animated.timing(scale, {
       toValue: 1,
-      duration: GROW_DURATION,
-      easing: Easing.out(Easing.cubic),
+      duration: 1000,
+      easing: Easing.out(Easing.quad),
       useNativeDriver: true,
     });
-
-    activeAnimationRef.current = grow;
-    grow.start(({ finished }) => {
-      if (finished && isRunning) {
-        runPhase2();
+    activeAnimationRef.current = widthAnim;
+    widthAnim.start(({ finished }) => {
+      if (finished) {
+        setPhase(2);
+        phase_2();
       }
     });
-  }, [isRunning, runPhase2, scale, translateY]);
+  };
+
+  const phase_2 = () => {
+    offsetY.setValue(0);
+    const offsetYAnim = Animated.timing(offsetY, {
+      toValue: wrapperSize.height,
+      duration: 1400,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    });
+    activeAnimationRef.current = offsetYAnim;
+    offsetYAnim.start(({ finished }) => {
+      if (finished) {
+        setPhase(3);
+      }
+    });
+  };
+
+  const phase_reset = () => {
+    scale.setValue(0);
+    offsetY.setValue(0);
+    setPhase(1);
+    phase_1();
+  };
 
   const handleLottieFinish = useCallback(() => {
-    if (!isRunning || phase !== 3) {
-      return;
-    }
-
-    runPhase1();
-  }, [isRunning, phase, runPhase1]);
+    phase_reset();
+    setPlaySerial((prev) => prev + 1);
+  }, [wrapperSize]);
 
   useEffect(() => {
-    if (!isRunning) {
-      resetDrop();
-      return;
+    if (isRunning) {
+      if (phase === 1) {
+        phase_1();
+      } else if (phase === 2) {
+        phase_2();
+      }
+    } else {
+      activeAnimationRef.current?.stop();
     }
-
-    if (wrapperSize.width <= 0 || wrapperSize.height <= 0) {
-      return;
-    }
-
-    runPhase1();
-
     return () => {
       activeAnimationRef.current?.stop();
     };
-  }, [isRunning, resetDrop, runPhase1, wrapperSize.height, wrapperSize.width]);
+  }, [isRunning, wrapperSize]);
 
   return (
     <View
@@ -111,27 +98,41 @@ export function WaterDrapAnimation({
     >
       <Animated.View
         style={[
+          styles.waterDrop,
           {
-            position: "absolute",
-            left: leftOffset,
-            top: 0,
-            width: targetWidth,
-            transform: [{ scale }, { translateY }],
+            transform: [
+              {
+                translateY: offsetY,
+              },
+            ],
           },
         ]}
       >
-        <UniversalLottie
-          key={playSerial}
-          source={waterDropAnimation}
-          dotLottieSource={require("~/animations/waterdrop.json")}
-          loop={false}
-          autoplay={phase === 3 && isRunning}
-          onAnimationFinish={handleLottieFinish}
-          style={{ width: "100%", aspectRatio: 1 }}
-          onLoadError={() => {
-            console.warn("Water drop animation failed to load");
-          }}
-        />
+        <Animated.View
+          style={[
+            styles.waterDropInner,
+            {
+              transform: [
+                {
+                  scale,
+                },
+              ],
+            },
+          ]}
+        >
+          <UniversalLottie
+            key={playSerial}
+            source={waterDropAnimation}
+            dotLottieSource={require("~/animations/waterdrop.json")}
+            loop={false}
+            autoplay={phase === 3}
+            onAnimationFinish={handleLottieFinish}
+            style={styles.waterDropAnimation}
+            onLoadError={() => {
+              console.warn("Water drop animation failed to load");
+            }}
+          />
+        </Animated.View>
       </Animated.View>
     </View>
   );
