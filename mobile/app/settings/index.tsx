@@ -3,17 +3,15 @@ import { Alert, Pressable, Text, View } from "react-native";
 import { SettingRow } from "@/components/SettingRow";
 import { MoodSwitch } from "@/components/MoodSwitch";
 import { Timer } from "@/components/timer";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { WeekdaySelector } from "@/components/WeekdaySelector";
-import styles from "./_styles";
-
-type WorkSchedule = {
-  startTime: string;
-  endTime: string;
-  workDays: number[];
-  lunchStart?: string;
-  lunchEnd?: string;
-};
+import { BottonSwitch } from "@/components/BottonSwitch";
+import styles from "@/styles/settings";
+import { useSettingsStore } from "@/store";
+import { validateSchedule } from "@/schedule";
+import { t } from "_/i18";
+import type { WorkSchedule } from "_/types";
+import type { AppLanguage } from "_/types";
 
 function toMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
@@ -50,37 +48,35 @@ function getLunchTimeText(schedule: WorkSchedule): string {
   return `${schedule.lunchStart}-${schedule.lunchEnd}`;
 }
 
-function validateSchedule(schedule: WorkSchedule): string | null {
-  if (toMinutes(schedule.startTime) > toMinutes(schedule.endTime)) {
-    return "工作开始时间不能晚于结束时间";
-  }
-
-  if (schedule.workDays.length === 0) {
-    return "请至少选择一个工作日";
-  }
-
-  if (schedule.lunchStart && schedule.lunchEnd) {
-    const start = toMinutes(schedule.startTime);
-    const end = toMinutes(schedule.endTime);
-    const lunchStart = toMinutes(schedule.lunchStart);
-    const lunchEnd = toMinutes(schedule.lunchEnd);
-
-    if (lunchStart < start || lunchEnd > end || lunchStart > lunchEnd) {
-      return "午休时间需落在工作时间内";
-    }
-  }
-
-  return null;
-}
-
 export default function HomePage() {
-  const [draft, setDraft] = useState<WorkSchedule>({
-    startTime: "09:00",
-    endTime: "18:00",
-    workDays: [1, 2, 3, 4, 5],
-    lunchStart: "12:00",
-    lunchEnd: "13:00",
-  });
+  const {
+    schedule,
+    language,
+    configured,
+    isLoading,
+    updateLanguage,
+    updateSchedule,
+  } = useSettingsStore();
+  const [isSaving, setIsSaving] = useState(false);
+  const [draft, setDraft] = useState<WorkSchedule>(schedule);
+  const [draftLanguage, setDraftLanguage] = useState<AppLanguage>(language);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setDraft(schedule);
+      setDraftLanguage(language);
+    }
+  }, [isLoading, language, schedule]);
+
+  const isScheduleDirty = useMemo(() => {
+    return JSON.stringify(schedule) !== JSON.stringify(draft);
+  }, [draft, schedule]);
+
+  const isLanguageDirty = useMemo(() => {
+    return draftLanguage !== language;
+  }, [draftLanguage, language]);
+
+  const isDirty = isScheduleDirty || isLanguageDirty;
 
   const handleStartTimeChange = (nextStart: string) => {
     setDraft((current) => {
@@ -154,25 +150,67 @@ export default function HomePage() {
     });
   };
 
-  const handleSave = () => {
-    const error = validateSchedule(draft);
+  const handleReset = () => {
+    setDraft(schedule);
+    setDraftLanguage(language);
+  };
+
+  const handleSave = async () => {
+    const text = t(draftLanguage);
+    const error = validateSchedule(draft, draftLanguage);
     if (error) {
-      Alert.alert("设置有误", error);
+      Alert.alert(text.settingsErrorTitle, error);
       return;
     }
 
-    Alert.alert("保存成功", "设置已更新");
+    try {
+      setIsSaving(true);
+      if (isLanguageDirty) {
+        await updateLanguage(draftLanguage);
+      }
+      if (isScheduleDirty) {
+        await updateSchedule(draft, !configured);
+      }
+      Alert.alert(text.saveSuccessTitle, text.saveSuccessMsg);
+    } catch {
+      Alert.alert(text.saveFailTitle, text.saveFailMsg);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  if (isLoading) {
+    return (
+      <Layout header={{ title: t(language).settings }}>
+        <View style={styles.loadingWrap}>
+          <Text style={styles.loadingText}>{t(language).settingsLoading}</Text>
+        </View>
+      </Layout>
+    );
+  }
+
+  const text = t(language);
+
   return (
-    <Layout
-      header={{
-        title: "settings",
-      }}
-    >
-      <SettingRow
-        label="工作时间"
-      >
+    <Layout header={{ title: text.settings }}>
+      <SettingRow label={text.sectionLanguage}>
+        <View style={styles.languageSwitchRow}>
+          <BottonSwitch
+            checked={draftLanguage === "zh"}
+            label={text.languageZh}
+            onPress={() => setDraftLanguage("zh")}
+            style={styles.languageSwitch}
+          />
+          <BottonSwitch
+            checked={draftLanguage === "en"}
+            label={text.languageEn}
+            onPress={() => setDraftLanguage("en")}
+            style={styles.languageSwitch}
+          />
+        </View>
+      </SettingRow>
+
+      <SettingRow label={text.sectionWorkTime}>
         <View style={styles.timeRange}>
           <Timer
             style={styles.timeValue}
@@ -191,7 +229,7 @@ export default function HomePage() {
         </View>
       </SettingRow>
       <SettingRow
-        label="午休时间"
+        label={text.sectionLunchTime}
         more={<MoodSwitch checked={Boolean(draft.lunchStart && draft.lunchEnd)} onPress={toggleLunchBreak} />}
       >
         <View style={styles.timeRange}>
@@ -223,14 +261,32 @@ export default function HomePage() {
           )}
         </View>
       </SettingRow>
-      <SettingRow label="工作日选择">
+      <SettingRow label={text.sectionWorkDays}>
         <WeekdaySelector value={draft.workDays} onChange={(workDays) => setDraft((s) => ({ ...s, workDays }))} />
       </SettingRow>
 
       <View style={styles.footer}>
-        <Pressable style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>保存设置</Text>
-        </Pressable>
+        <View style={styles.actionsRow}>
+          <Pressable
+            style={[styles.resetButton, !isDirty && styles.buttonDisabled]}
+            onPress={handleReset}
+            disabled={!isDirty || isSaving}
+          >
+            <Text style={styles.resetButtonText}>{text.resetSettings}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.saveButton, (!isDirty || isSaving) && styles.buttonDisabled]}
+            onPress={handleSave}
+            disabled={!isDirty || isSaving}
+          >
+            <Text style={styles.saveButtonText}>{isSaving ? text.savingSettings : text.saveSettings}</Text>
+          </Pressable>
+        </View>
+        <Text style={styles.hintText}>{text.settingsCacheHint}</Text>
+        <Text style={styles.hintText}>{text.currentStatus}{configured ? text.configuredHint : text.firstConfigHint}</Text>
+      </View>
+      <View style={styles.bottomSpacer}>
+        <Text style={styles.bottomSpacerText}> </Text>
       </View>
     </Layout>
   );

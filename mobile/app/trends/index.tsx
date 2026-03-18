@@ -1,6 +1,6 @@
 import { Layout } from "@/components/layout";
 import { View } from "react-native";
-import styles from "./_styles";
+import styles from "@/styles/trends";
 import { Card } from "@/components/Card";
 import { Chart } from "@/components/Chart";
 // 当前运行环境变量是开发环境还是生产环境

@@ -10,7 +10,6 @@ const styles = StyleSheet.create({
     marginBottom: rs(30),
   },
   card: {
-    backgroundColor: theme.colors.surface,
     borderRadius: theme.radius.card,
     padding: rs(20),
   },
