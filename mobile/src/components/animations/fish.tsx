@@ -1,18 +1,22 @@
 import { UniversalLottie } from "./UniversalLottie";
 import fishAnimation from "~/animations/fish.json";
-import type { StyleProp, ViewStyle } from "react-native";
+import styles from "./fish.style";
+import type { AnimationStage } from "./types";
 
 
 export function FishAnimation({
-    style
+    stage,
 }: {
-    style?: StyleProp<ViewStyle>;
+    stage: AnimationStage;
 }) {
     return <UniversalLottie
         source={fishAnimation}
         dotLottieSource={require('~/animations/fish.json')}
         loop
         autoplay
-        style={style}
+        style={[
+            styles.fish,
+            styles[`stage_${stage}`],
+        ]}
     />
 }

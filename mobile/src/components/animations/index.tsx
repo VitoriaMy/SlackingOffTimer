@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { FishAnimation } from "./fish";
 import { WaterDrapAnimation } from "./waterDrap";
 import type { AnimationStage } from "./types";
@@ -8,7 +8,7 @@ import styles from "./index.style";
 
 export function Animations({
   isRunning = true,
-  progress = 14,
+  progress = 0,
 }: {
   isRunning?: boolean;
   progress?: number;
@@ -32,10 +32,12 @@ export function Animations({
       <WaterAnimation
         stage={clampedStage}
       />
-      <WaterDrapAnimation isRunning={isRunning} 
-       stage={clampedStage}
+      <WaterDrapAnimation isRunning={isRunning}
+        stage={clampedStage}
       />
-      <FishAnimation />
+      <FishAnimation
+        stage={clampedStage}
+      />
     </View>
   );
 }
