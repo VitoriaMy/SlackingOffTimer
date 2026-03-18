@@ -1,16 +1,25 @@
-import { View, Text, Button } from "react-native"
-import styles from "./index.style"
+import { Pressable, Text, View } from "react-native";
+import styles from "./index.style";
 
-export function StatusCard() {
-    return <View style={styles.statusCard}>
-        <View style={styles.time}>
-            <Text style={styles.timeText}>12:23:34</Text>
+interface StatusCardProps {
+    durationText: string;
+    statusText: string;
+    actionText: string;
+    onPress: () => void;
+}
+
+export function StatusCard({ durationText, statusText, actionText, onPress }: StatusCardProps) {
+    return (
+        <View style={styles.statusCard}>
+            <View style={styles.time}>
+                <Text style={styles.timeText}>{durationText}</Text>
+            </View>
+            <View style={styles.status}>
+                <Text style={styles.statusText}>{statusText}</Text>
+            </View>
+            <Pressable style={styles.triggerButton} onPress={onPress}>
+                <Text style={styles.triggerButtonText}>{actionText}</Text>
+            </Pressable>
         </View>
-        <View style={styles.status}>
-            <Text style={styles.statusText}>正在工作中</Text>
-        </View>
-        <View style={styles.triggerButton}>
-            <Text style={styles.triggerButtonText}>开始工作</Text>
-        </View>
-    </View>
+    );
 }

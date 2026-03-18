@@ -10,6 +10,7 @@ import styles from "@/styles/settings";
 import { useSettingsStore } from "@/store";
 import { validateSchedule } from "@/schedule";
 import { t } from "_/i18";
+import { useRouter } from "expo-router";
 import type { WorkSchedule } from "_/types";
 import type { AppLanguage } from "_/types";
 
@@ -49,6 +50,7 @@ function getLunchTimeText(schedule: WorkSchedule): string {
 }
 
 export default function HomePage() {
+  const router = useRouter();
   const {
     schedule,
     language,
@@ -150,13 +152,14 @@ export default function HomePage() {
     });
   };
 
-  const handleReset = () => {
-    setDraft(schedule);
-    setDraftLanguage(language);
-  };
-
   const handleSave = async () => {
     const text = t(draftLanguage);
+
+    if (configured && !isDirty) {
+      router.replace("/");
+      return;
+    }
+
     const error = validateSchedule(draft, draftLanguage);
     if (error) {
       Alert.alert(text.settingsErrorTitle, error);
@@ -168,10 +171,11 @@ export default function HomePage() {
       if (isLanguageDirty) {
         await updateLanguage(draftLanguage);
       }
-      if (isScheduleDirty) {
-        await updateSchedule(draft, !configured);
+      if (!configured || isScheduleDirty) {
+        await updateSchedule(draft, true);
       }
       Alert.alert(text.saveSuccessTitle, text.saveSuccessMsg);
+      router.replace("/");
     } catch {
       Alert.alert(text.saveFailTitle, text.saveFailMsg);
     } finally {
@@ -192,7 +196,7 @@ export default function HomePage() {
   const text = t(language);
 
   return (
-    <Layout header={{ title: text.settings }}>
+    <Layout header={{ title: text.settings, showLeft: configured }}>
       <SettingRow label={text.sectionLanguage}>
         <View style={styles.languageSwitchRow}>
           <BottonSwitch
@@ -268,22 +272,13 @@ export default function HomePage() {
       <View style={styles.footer}>
         <View style={styles.actionsRow}>
           <Pressable
-            style={[styles.resetButton, !isDirty && styles.buttonDisabled]}
-            onPress={handleReset}
-            disabled={!isDirty || isSaving}
-          >
-            <Text style={styles.resetButtonText}>{text.resetSettings}</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.saveButton, (!isDirty || isSaving) && styles.buttonDisabled]}
+            style={styles.saveButton}
             onPress={handleSave}
-            disabled={!isDirty || isSaving}
           >
             <Text style={styles.saveButtonText}>{isSaving ? text.savingSettings : text.saveSettings}</Text>
           </Pressable>
         </View>
         <Text style={styles.hintText}>{text.settingsCacheHint}</Text>
-        <Text style={styles.hintText}>{text.currentStatus}{configured ? text.configuredHint : text.firstConfigHint}</Text>
       </View>
       <View style={styles.bottomSpacer}>
         <Text style={styles.bottomSpacerText}> </Text>

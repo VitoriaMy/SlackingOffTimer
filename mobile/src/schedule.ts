@@ -6,8 +6,19 @@ const toMinutes = (hhmm: string): number => {
   return h * 60 + m;
 };
 
+const normalizeWorkDays = (workDays: unknown): number[] => {
+  if (!Array.isArray(workDays)) {
+    return [];
+  }
+
+  return [...new Set(workDays.map((day) => Number(day)))]
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    .sort((a, b) => a - b);
+};
+
 const isWorkDate = (date: Date, schedule: WorkSchedule): boolean => {
-  return schedule.workDays.includes(date.getDay());
+  const workDays = normalizeWorkDays(schedule.workDays);
+  return workDays.includes(date.getDay());
 };
 
 export const dateKey = (date: Date): string => {
@@ -39,6 +50,7 @@ export const getWorkSegmentId = (date: Date, schedule: WorkSchedule): string | n
 
 export const normalizeSchedule = (schedule: WorkSchedule): WorkSchedule => ({
   ...schedule,
+  workDays: normalizeWorkDays(schedule.workDays),
   holidays: schedule.holidays ?? [],
   dayOverrides: {
     ...(schedule.dayOverrides ?? {}),

@@ -84,9 +84,11 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 
 	const rawValue = getSafeMinutes(value, range.lower);
 	const normalizedValue = clamp(rawValue, range.lower, range.upper);
+	const normalizedText = useMemo(() => formatHHMM(normalizedValue), [normalizedValue]);
 	const [draftValue, setDraftValue] = useState(normalizedValue);
 	const [draftHour, setDraftHour] = useState(Math.floor(normalizedValue / 60));
 	const [draftMinute, setDraftMinute] = useState(normalizedValue % 60);
+	const lastAutoNormalizedRef = useRef<string | null>(null);
 
 	const hourListRef = useRef<ScrollView | null>(null);
 	const minuteListRef = useRef<ScrollView | null>(null);
@@ -120,10 +122,18 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 	);
 
 	useEffect(() => {
-		if (normalizedValue !== rawValue || value !== formatHHMM(normalizedValue)) {
-			onChange(formatHHMM(normalizedValue));
+		if (value === normalizedText) {
+			lastAutoNormalizedRef.current = normalizedText;
+			return;
 		}
-	}, [normalizedValue, onChange, rawValue, value]);
+
+		if (lastAutoNormalizedRef.current === normalizedText) {
+			return;
+		}
+
+		lastAutoNormalizedRef.current = normalizedText;
+		onChange(normalizedText);
+	}, [normalizedText, onChange, value]);
 
 	useEffect(() => {
 		if (!open) {
@@ -218,7 +228,7 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 	return (
 		<>
 			<Pressable style={[styles.timer, style]} onPress={openPicker}>
-				<Text style={styles.timerText}>{formatHHMM(normalizedValue)}</Text>
+				<Text style={styles.timerText}>{normalizedText}</Text>
 			</Pressable>
 
 			{open ? (

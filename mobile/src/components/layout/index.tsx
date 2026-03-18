@@ -18,6 +18,7 @@ type LayoutProps = {
   // rightAction?: HeaderAction;
   children: ReactNode;
   header?: {
+    showLeft?: boolean;
     left?: NavProps;
     title?: React.ReactNode;
     right?: NavProps;
@@ -26,6 +27,7 @@ type LayoutProps = {
 
 export function Layout({
   header: {
+    showLeft = true,
     left,
     title,
     right
@@ -37,11 +39,15 @@ export function Layout({
   return (
     <SafeAreaView style={styles.page}>
       <View style={styles.header}>
-        <Link style={[styles.navLink, styles.left]}
-          href={left?.to || "/"}
-        >
-          {left?.children || <Icons name="left" size={rfs(22)} color={theme.colors.primary} />}
-        </Link>
+        {showLeft ? (
+          <Link style={[styles.navLink, styles.left]}
+            href={left?.to || "/"}
+          >
+            {left?.children || <Icons name="left" size={rfs(22)} color={theme.colors.primary} />}
+          </Link>
+        ) : (
+          <View style={[styles.navLink, styles.left]} />
+        )}
         <Text style={styles.headerTitle} >{title}</Text>
         {
           right ? (<Link style={[styles.navLink, styles.right]}
