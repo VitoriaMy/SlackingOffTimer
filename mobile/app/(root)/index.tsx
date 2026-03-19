@@ -7,7 +7,7 @@ import { useSlackRecord } from "@/hooks/useSlackRecord";
 import { usei18n } from "@/hooks/usei18n";
 import { StatusCard } from "@/components/statusCard";
 import { Animations } from "@/components/animations";
-import { Alert, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import styles from "@/styles/home";
 import { Redirect } from "expo-router";
 import { useSettingsStore } from "@/store";
@@ -21,7 +21,7 @@ export default function HomePage() {
   const { configured, isLoading } = useSettingsStore();
   const { durationText, ratio } = useCurrentSlackingDuration();
   const isWorkTime = useIsWorkTime();
-  const { recordSlackSwitch, currentSwitchState } = useSlackRecord();
+  const { currentSwitchState } = useSlackRecord();
 
   if (!isLoading && !configured) {
     return <Redirect href="/settings" />;
@@ -30,13 +30,6 @@ export default function HomePage() {
   const checked = currentSwitchState === 1;
   const statusText = !isWorkTime ? i18n("offWork") : checked ? i18n("tracking") : i18n("standby");
   const isAnimationRunning = checked && isWorkTime;
-
-  const handleToggle = async () => {
-    const recorded = await recordSlackSwitch();
-    if (!recorded) {
-      Alert.alert(i18n("status"), i18n("notWorkHint"));
-    }
-  };
 
   return (
     <Layout
@@ -58,8 +51,6 @@ export default function HomePage() {
         <StatusCard
           durationText={durationText}
           statusText={statusText}
-          actionText={checked ? i18n("stopSession") : i18n("startSession")}
-          onPress={handleToggle}
         />
       </View>
       {/* {isDev ? <DevNav /> : null} */}

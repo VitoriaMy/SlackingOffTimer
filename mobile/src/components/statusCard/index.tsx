@@ -4,8 +4,8 @@ import styles from "./index.style";
 interface StatusCardProps {
     durationText: string;
     statusText: string;
-    actionText: string;
-    onPress: () => void;
+    actionText?: string;
+    onPress?: () => void;
 }
 
 export function StatusCard({ durationText, statusText, actionText, onPress }: StatusCardProps) {
@@ -17,9 +17,11 @@ export function StatusCard({ durationText, statusText, actionText, onPress }: St
             <View style={styles.status}>
                 <Text style={styles.statusText}>{statusText}</Text>
             </View>
-            <Pressable style={styles.triggerButton} onPress={onPress}>
-                <Text style={styles.triggerButtonText}>{actionText}</Text>
-            </Pressable>
+            {actionText && onPress ? (
+                <Pressable style={styles.triggerButton} onPress={onPress}>
+                    <Text style={styles.triggerButtonText}>{actionText}</Text>
+                </Pressable>
+            ) : null}
         </View>
     );
 }
