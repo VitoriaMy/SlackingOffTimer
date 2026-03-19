@@ -54,7 +54,6 @@ export default function HomePage() {
     >
       <View style={styles.home}>
         {isLoading ? <Text>{i18n("loading")}</Text> : null}
-        <Text>progress:{ratio}</Text>
         <Animations isRunning={isAnimationRunning} progress={ratio} />
         <StatusCard
           durationText={durationText}
