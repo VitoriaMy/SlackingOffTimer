@@ -24,6 +24,7 @@ type SettingsStoreValue = {
   updateSchedule: (next: WorkSchedule, shouldMarkConfigured?: boolean) => Promise<void>;
   updateConfigured: (next: boolean) => Promise<void>;
   addSlackingRecord: (switchState: SlackSwitchState) => Promise<void>;
+  appendSlackingRecords: (records: SlackingRecord[]) => Promise<void>;
   reloadSlackingRecords: () => Promise<void>;
   reloadScheduleHistory: () => Promise<void>;
 };
@@ -113,6 +114,29 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
     [slackingRecords],
   );
 
+  const appendSlackingRecords = useCallback(
+    async (records: SlackingRecord[]) => {
+      if (records.length === 0) {
+        return;
+      }
+
+      const valid = records.filter(
+        (record) =>
+          Number.isFinite(record.timestamp) &&
+          (record.switchState === 0 || record.switchState === 1),
+      );
+
+      if (valid.length === 0) {
+        return;
+      }
+
+      const merged = keepRecent7DaysRecords([...slackingRecords, ...valid]);
+      setSlackingRecords(merged);
+      await saveSlackingRecords(merged);
+    },
+    [slackingRecords],
+  );
+
   const reloadSlackingRecords = useCallback(async () => {
     const records = await loadSlackingRecords();
     setSlackingRecords(records);
@@ -134,6 +158,7 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
       updateSchedule,
       updateConfigured,
       addSlackingRecord,
+      appendSlackingRecords,
       reloadSlackingRecords,
       reloadScheduleHistory,
     }),
@@ -147,6 +172,7 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
       updateSchedule,
       updateConfigured,
       addSlackingRecord,
+      appendSlackingRecords,
       reloadSlackingRecords,
       reloadScheduleHistory,
     ],

@@ -1,0 +1,7 @@
+<resources>
+  <string name="app_name">mobile</string>
+  <string name="bg_usage_channel_name">Slacking Monitor</string>
+  <string name="bg_usage_notification_title">SlackingOff is running</string>
+  <string name="bg_usage_notification_body">Monitoring phone usage in the background</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+</resources>

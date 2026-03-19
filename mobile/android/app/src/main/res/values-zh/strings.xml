@@ -1,0 +1,5 @@
+<resources>
+  <string name="bg_usage_channel_name">摸鱼状态监听</string>
+  <string name="bg_usage_notification_title">SlackingOff 运行中</string>
+  <string name="bg_usage_notification_body">后台监听手机使用状态</string>
+</resources>

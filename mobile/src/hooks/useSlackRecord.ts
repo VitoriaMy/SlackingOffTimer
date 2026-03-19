@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSettingsStore } from "@/store";
 import { getWorkSegmentId } from "@/schedule";
-import { AppState, type AppStateStatus } from "react-native";
+import { AppState, Platform, type AppStateStatus } from "react-native";
 import { Gyroscope } from "expo-sensors";
+import {
+  consumeBackgroundUsageEvents,
+  startBackgroundUsageMonitoring,
+} from "@/native/backgroundUsage";
 import type { SlackSwitchState } from "_/types";
 
 const SWITCH_STATE_TICK_MS = 5 * 1000;
@@ -10,13 +14,15 @@ const AUTO_SWITCH_TICK_MS = 5 * 1000;
 const GYROSCOPE_UPDATE_MS = 1000;
 const GYROSCOPE_ACTIVITY_THRESHOLD = 0.12;
 const USER_ACTIVE_TIMEOUT_MS = 20 * 1000;
+const NATIVE_EVENTS_SYNC_MS = 4000;
 
 export function useSlackRecord() {
-  const { addSlackingRecord, reloadSlackingRecords, slackingRecords, schedule } = useSettingsStore();
+  const { addSlackingRecord, appendSlackingRecords, reloadSlackingRecords, slackingRecords, schedule } = useSettingsStore();
   const initializedRef = useRef(false);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState ?? "active");
   const lastActiveAtRef = useRef<number>(Date.now());
   const switchingRef = useRef(false);
+  const useNativeBackgroundListener = Platform.OS === "android";
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   useEffect(() => {
@@ -39,6 +45,10 @@ export function useSlackRecord() {
   }, []);
 
   useEffect(() => {
+    if (useNativeBackgroundListener) {
+      return;
+    }
+
     const subscription = AppState.addEventListener("change", (nextState) => {
       appStateRef.current = nextState;
       if (nextState === "active") {
@@ -50,9 +60,13 @@ export function useSlackRecord() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [useNativeBackgroundListener]);
 
   useEffect(() => {
+    if (useNativeBackgroundListener) {
+      return;
+    }
+
     Gyroscope.setUpdateInterval(GYROSCOPE_UPDATE_MS);
     const subscription = Gyroscope.addListener(({ x, y, z }) => {
       const movement = Math.abs(x) + Math.abs(y) + Math.abs(z);
@@ -64,7 +78,7 @@ export function useSlackRecord() {
     return () => {
       subscription.remove();
     };
-  }, []);
+  }, [useNativeBackgroundListener]);
 
   const currentSegmentId = useMemo(() => getWorkSegmentId(new Date(nowMs), schedule), [nowMs, schedule]);
 
@@ -95,6 +109,10 @@ export function useSlackRecord() {
   }, [addSlackingRecord, currentSegmentId, currentSwitchState]);
 
   useEffect(() => {
+    if (useNativeBackgroundListener) {
+      return;
+    }
+
     const syncAutoSwitch = async () => {
       if (switchingRef.current) {
         return;
@@ -123,7 +141,41 @@ export function useSlackRecord() {
     return () => {
       clearInterval(timer);
     };
-  }, [addSlackingRecord, currentSegmentId, currentSwitchState]);
+  }, [addSlackingRecord, currentSegmentId, currentSwitchState, useNativeBackgroundListener]);
+
+  useEffect(() => {
+    if (!useNativeBackgroundListener) {
+      return;
+    }
+
+    startBackgroundUsageMonitoring().catch(() => {
+      // Android-only native fallback; no-op if native module is unavailable.
+    });
+  }, [useNativeBackgroundListener]);
+
+  useEffect(() => {
+    if (!useNativeBackgroundListener) {
+      return;
+    }
+
+    const sync = async () => {
+      const events = await consumeBackgroundUsageEvents();
+      if (events.length === 0) {
+        return;
+      }
+
+      await appendSlackingRecords(events);
+    };
+
+    sync();
+    const timer = setInterval(() => {
+      sync();
+    }, NATIVE_EVENTS_SYNC_MS);
+
+    return () => {
+      clearInterval(timer);
+    };
+  }, [appendSlackingRecords, useNativeBackgroundListener]);
 
   return {
     recordSlackSwitch,
