@@ -18,14 +18,6 @@ const styles = StyleSheet.create({
 		gap: rs(16),
 		width: "100%",
 	},
-	languageSwitchRow: {
-		flexDirection: "row",
-		gap: rs(12),
-		width: "100%",
-	},
-	languageSwitch: {
-		flex: 1,
-	},
 	timeValue: {
 		flex: 1,
 		height: rs(62),

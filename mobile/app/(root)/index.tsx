@@ -19,7 +19,7 @@ const isDev = __DEV__;
 export default function HomePage() {
   const i18n = usei18n();
   const { configured, isLoading } = useSettingsStore();
-  const { durationText } = useCurrentSlackingDuration();
+  const { durationText, ratio } = useCurrentSlackingDuration();
   const isWorkTime = useIsWorkTime();
   const { recordSlackSwitch, currentSwitchState } = useSlackRecord();
 
@@ -54,7 +54,8 @@ export default function HomePage() {
     >
       <View style={styles.home}>
         {isLoading ? <Text>{i18n("loading")}</Text> : null}
-        <Animations isRunning={isAnimationRunning} />
+        <Text>progress:{ratio}</Text>
+        <Animations isRunning={isAnimationRunning} progress={ratio} />
         <StatusCard
           durationText={durationText}
           statusText={statusText}

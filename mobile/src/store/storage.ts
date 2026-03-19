@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  AppLanguage,
   ScheduleHistoryRecord,
   SlackingRecord,
   WorkSchedule,
@@ -9,7 +8,6 @@ import {
 
 const scheduleKey = "slacking_schedule";
 const configuredKey = "slacking_configured";
-const languageKey = "slacking_language";
 const slackingRecordsKey = "slacking_records";
 const scheduleHistoryKey = "slacking_schedule_history";
 const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
@@ -83,23 +81,6 @@ export const keepRecent7DaysScheduleHistory = (
         record.savedAt <= now,
     )
     .sort((a, b) => a.savedAt - b.savedAt);
-};
-
-export const loadLanguage = async (): Promise<AppLanguage> => {
-  try {
-    const value = await AsyncStorage.getItem(languageKey);
-    return value === "en" ? "en" : "zh";
-  } catch {
-    return "zh";
-  }
-};
-
-export const saveLanguage = async (language: AppLanguage): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(languageKey, language);
-  } catch {
-    console.warn("Failed to save language");
-  }
 };
 
 export const loadConfigured = async (): Promise<boolean> => {
@@ -184,7 +165,6 @@ export const clearAllData = async (): Promise<void> => {
     await AsyncStorage.multiRemove([
       scheduleKey,
       configuredKey,
-      languageKey,
       slackingRecordsKey,
       scheduleHistoryKey,
     ]);

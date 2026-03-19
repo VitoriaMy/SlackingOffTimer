@@ -5,14 +5,12 @@ import { MoodSwitch } from "@/components/MoodSwitch";
 import { Timer } from "@/components/timer";
 import { useEffect, useMemo, useState } from "react";
 import { WeekdaySelector } from "@/components/WeekdaySelector";
-import { BottonSwitch } from "@/components/BottonSwitch";
 import styles from "@/styles/settings";
 import { useSettingsStore } from "@/store";
 import { validateSchedule } from "@/schedule";
 import { t } from "_/i18";
 import { useRouter } from "expo-router";
 import type { WorkSchedule } from "_/types";
-import type { AppLanguage } from "_/types";
 
 function toMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
@@ -56,29 +54,22 @@ export default function HomePage() {
     language,
     configured,
     isLoading,
-    updateLanguage,
     updateSchedule,
   } = useSettingsStore();
   const [isSaving, setIsSaving] = useState(false);
   const [draft, setDraft] = useState<WorkSchedule>(schedule);
-  const [draftLanguage, setDraftLanguage] = useState<AppLanguage>(language);
 
   useEffect(() => {
     if (!isLoading) {
       setDraft(schedule);
-      setDraftLanguage(language);
     }
-  }, [isLoading, language, schedule]);
+  }, [isLoading, schedule]);
 
   const isScheduleDirty = useMemo(() => {
     return JSON.stringify(schedule) !== JSON.stringify(draft);
   }, [draft, schedule]);
 
-  const isLanguageDirty = useMemo(() => {
-    return draftLanguage !== language;
-  }, [draftLanguage, language]);
-
-  const isDirty = isScheduleDirty || isLanguageDirty;
+  const isDirty = isScheduleDirty;
 
   const handleStartTimeChange = (nextStart: string) => {
     setDraft((current) => {
@@ -153,14 +144,14 @@ export default function HomePage() {
   };
 
   const handleSave = async () => {
-    const text = t(draftLanguage);
+    const text = t(language);
 
     if (configured && !isDirty) {
       router.replace("/");
       return;
     }
 
-    const error = validateSchedule(draft, draftLanguage);
+    const error = validateSchedule(draft, language);
     if (error) {
       Alert.alert(text.settingsErrorTitle, error);
       return;
@@ -168,9 +159,6 @@ export default function HomePage() {
 
     try {
       setIsSaving(true);
-      if (isLanguageDirty) {
-        await updateLanguage(draftLanguage);
-      }
       if (!configured || isScheduleDirty) {
         await updateSchedule(draft, true);
       }
@@ -197,23 +185,6 @@ export default function HomePage() {
 
   return (
     <Layout header={{ title: text.settings, showLeft: configured }}>
-      <SettingRow label={text.sectionLanguage}>
-        <View style={styles.languageSwitchRow}>
-          <BottonSwitch
-            checked={draftLanguage === "zh"}
-            label={text.languageZh}
-            onPress={() => setDraftLanguage("zh")}
-            style={styles.languageSwitch}
-          />
-          <BottonSwitch
-            checked={draftLanguage === "en"}
-            label={text.languageEn}
-            onPress={() => setDraftLanguage("en")}
-            style={styles.languageSwitch}
-          />
-        </View>
-      </SettingRow>
-
       <SettingRow label={text.sectionWorkTime}>
         <View style={styles.timeRange}>
           <Timer

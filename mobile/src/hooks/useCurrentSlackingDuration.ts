@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSettingsStore } from "@/store";
-import { computeDurationMsByRecords, formatDayKey, getDayRangeByKey } from "./slackingStatsUtils";
+import {
+  buildSchedulePeriods,
+  computeDurationMsByRecords,
+  findEffectiveScheduleForRange,
+  formatDayKey,
+  getDayRangeByKey,
+  getPlannedWorkMs,
+  toRatio,
+} from "./slackingStatsUtils";
 
 const DEFAULT_TICK_MS = 1000;
 
@@ -20,7 +28,7 @@ function getStartOfTodayMs(nowMs: number): number {
 }
 
 export function useCurrentSlackingDuration(tickMs = DEFAULT_TICK_MS) {
-  const { slackingRecords, schedule } = useSettingsStore();
+  const { slackingRecords, schedule, scheduleHistory } = useSettingsStore();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -33,21 +41,33 @@ export function useCurrentSlackingDuration(tickMs = DEFAULT_TICK_MS) {
     };
   }, [tickMs]);
 
-  const durationMs = useMemo(() => {
+  const { durationMs, ratio } = useMemo(() => {
     const dayStartMs = getStartOfTodayMs(nowMs);
     const records = slackingRecords.filter((record) => record.timestamp >= dayStartMs && record.timestamp <= nowMs);
+    const schedulePeriods = buildSchedulePeriods(schedule, scheduleHistory);
 
     const dayKey = formatDayKey(new Date(nowMs));
     const range = getDayRangeByKey(dayKey);
     if (!range) {
-      return 0;
+      return {
+        durationMs: 0,
+        ratio: 0,
+      };
     }
 
-    return computeDurationMsByRecords(records, range, nowMs, schedule);
-  }, [nowMs, schedule, slackingRecords]);
+    const effectiveSchedule = findEffectiveScheduleForRange(schedulePeriods, range)?.schedule ?? schedule;
+    const durationMs = computeDurationMsByRecords(records, range, nowMs, effectiveSchedule);
+    const ratio = toRatio(durationMs, getPlannedWorkMs(effectiveSchedule));
+
+    return {
+      durationMs,
+      ratio,
+    };
+  }, [nowMs, schedule, scheduleHistory, slackingRecords]);
 
   return {
     durationMs,
     durationText: formatDuration(durationMs),
+    ratio,
   };
 }

@@ -3,12 +3,10 @@ import {
   keepRecent7DaysScheduleHistory,
   keepRecent7DaysRecords,
   loadConfigured,
-  loadLanguage,
   loadSchedule,
   loadScheduleHistory,
   loadSlackingRecords,
   saveConfigured,
-  saveLanguage,
   saveSchedule,
   saveScheduleHistory,
   saveSlackingRecords,
@@ -18,14 +16,11 @@ import { normalizeSchedule } from "../schedule";
 
 type SettingsStoreValue = {
   language: AppLanguage;
-  languageDraft: AppLanguage;
   configured: boolean;
   schedule: WorkSchedule;
   slackingRecords: SlackingRecord[];
   scheduleHistory: ScheduleHistoryRecord[];
   isLoading: boolean;
-  updateLanguage: (next: AppLanguage) => Promise<void>;
-  setLanguageDraft: (next: AppLanguage) => void;
   updateSchedule: (next: WorkSchedule, shouldMarkConfigured?: boolean) => Promise<void>;
   updateConfigured: (next: boolean) => Promise<void>;
   addSlackingRecord: (switchState: SlackSwitchState) => Promise<void>;
@@ -35,10 +30,14 @@ type SettingsStoreValue = {
 
 const SettingsStoreContext = createContext<SettingsStoreValue | null>(null);
 
+function resolveSystemLanguage(): AppLanguage {
+  const locale = Intl.DateTimeFormat().resolvedOptions().locale || "";
+  return locale.toLowerCase().startsWith("zh") ? "zh" : "en";
+}
+
 export function SettingsStoreProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [language, setLanguage] = useState<AppLanguage>("zh");
-  const [languageDraft, setLanguageDraft] = useState<AppLanguage>("zh");
+  const [language, setLanguage] = useState<AppLanguage>(() => resolveSystemLanguage());
   const [configured, setConfigured] = useState<boolean>(false);
   const [schedule, setSchedule] = useState<WorkSchedule>(() => normalizeSchedule(defaultSchedule));
   const [slackingRecords, setSlackingRecords] = useState<SlackingRecord[]>([]);
@@ -48,17 +47,15 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initStore = async () => {
       try {
-        const [loadedLanguage, loadedConfigured, loadedSchedule, loadedRecords, loadedHistory] =
+        const [loadedConfigured, loadedSchedule, loadedRecords, loadedHistory] =
           await Promise.all([
-            loadLanguage(),
             loadConfigured(),
             loadSchedule(),
             loadSlackingRecords(),
             loadScheduleHistory(),
           ]);
 
-        setLanguage(loadedLanguage);
-        setLanguageDraft(loadedLanguage);
+        setLanguage(resolveSystemLanguage());
         setConfigured(loadedConfigured);
         setSchedule(normalizeSchedule(loadedSchedule));
         setSlackingRecords(keepRecent7DaysRecords(loadedRecords));
@@ -71,12 +68,6 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
     };
 
     initStore();
-  }, []);
-
-  const updateLanguage = useCallback(async (next: AppLanguage) => {
-    setLanguage(next);
-    setLanguageDraft(next);
-    await saveLanguage(next);
   }, []);
 
   const updateSchedule = useCallback(
@@ -135,14 +126,11 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<SettingsStoreValue>(
     () => ({
       language,
-      languageDraft,
       configured,
       schedule,
       slackingRecords,
       scheduleHistory,
       isLoading,
-      updateLanguage,
-      setLanguageDraft,
       updateSchedule,
       updateConfigured,
       addSlackingRecord,
@@ -151,13 +139,11 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       language,
-      languageDraft,
       configured,
       schedule,
       slackingRecords,
       scheduleHistory,
       isLoading,
-      updateLanguage,
       updateSchedule,
       updateConfigured,
       addSlackingRecord,
