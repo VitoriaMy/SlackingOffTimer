@@ -14,7 +14,7 @@ const AUTO_SWITCH_TICK_MS = 5 * 1000;
 const GYROSCOPE_UPDATE_MS = 1000;
 const GYROSCOPE_ACTIVITY_THRESHOLD = 0.12;
 const USER_ACTIVE_TIMEOUT_MS = 20 * 1000;
-const NATIVE_EVENTS_SYNC_MS = 4000;
+const NATIVE_EVENTS_SYNC_MS = 200;
 
 export function useSlackRecord() {
   const { addSlackingRecord, appendSlackingRecords, reloadSlackingRecords, slackingRecords, schedule } = useSettingsStore();

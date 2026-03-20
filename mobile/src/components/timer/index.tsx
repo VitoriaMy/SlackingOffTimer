@@ -104,6 +104,8 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		[hourRange.maxHour, hourRange.minHour]
 	);
 
+	const hourLoopOptions = useMemo(() => [...hourOptions, ...hourOptions, ...hourOptions], [hourOptions]);
+
 	const getMinuteRange = (hour: number) => {
 		const isLowerHour = hour === hourRange.minHour;
 		const isUpperHour = hour === hourRange.maxHour;
@@ -120,6 +122,8 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		() => Array.from({ length: minuteRange.maxMinute - minuteRange.minMinute + 1 }, (_, i) => minuteRange.minMinute + i),
 		[minuteRange.maxMinute, minuteRange.minMinute]
 	);
+
+	const minuteLoopOptions = useMemo(() => [...minuteOptions, ...minuteOptions, ...minuteOptions], [minuteOptions]);
 
 	useEffect(() => {
 		if (value === normalizedText) {
@@ -177,34 +181,48 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 	const snapToNearest = (
 		offsetY: number,
 		options: number[],
+		baseLength: number,
 		setValue: (v: number) => void,
 		scroller?: ScrollView | null
 	) => {
+		if (baseLength <= 0) {
+			return;
+		}
+
 		const index = clamp(Math.round(offsetY / ITEM_HEIGHT), 0, options.length - 1);
-		const nextValue = options[index];
+		const normalizedIndex = index % baseLength;
+		const middleIndex = normalizedIndex + baseLength;
+		const nextValue = options[normalizedIndex];
 		setValue(nextValue);
-		scroller?.scrollTo({ y: index * ITEM_HEIGHT, animated: true });
+		scroller?.scrollTo({ y: middleIndex * ITEM_HEIGHT, animated: false });
 	};
 
 	const handleHourMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		snapToNearest(event.nativeEvent.contentOffset.y, hourOptions, setDraftHour, hourListRef.current);
+		snapToNearest(event.nativeEvent.contentOffset.y, hourLoopOptions, hourOptions.length, setDraftHour, hourListRef.current);
 	};
 
 	const handleMinuteMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		snapToNearest(event.nativeEvent.contentOffset.y, minuteOptions, setDraftMinute, minuteListRef.current);
+		snapToNearest(event.nativeEvent.contentOffset.y, minuteLoopOptions, minuteOptions.length, setDraftMinute, minuteListRef.current);
 	};
 
 	const scrollToOption = (
 		scroller: ScrollView | null,
 		options: number[],
+		baseLength: number,
 		selectedValue: number,
 		setValue: (v: number) => void
 	) => {
+		if (baseLength <= 0) {
+			return;
+		}
+
 		const index = options.indexOf(selectedValue);
 		if (index < 0) {
 			return;
 		}
-		scroller?.scrollTo({ y: index * ITEM_HEIGHT, animated: true });
+
+		const middleIndex = index + baseLength;
+		scroller?.scrollTo({ y: middleIndex * ITEM_HEIGHT, animated: true });
 		setValue(selectedValue);
 	};
 
@@ -217,11 +235,11 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		const minuteIndex = minuteOptions.indexOf(draftMinute);
 
 		if (hourIndex >= 0) {
-			hourListRef.current?.scrollTo({ y: hourIndex * ITEM_HEIGHT, animated: false });
+			hourListRef.current?.scrollTo({ y: (hourIndex + hourOptions.length) * ITEM_HEIGHT, animated: false });
 		}
 
 		if (minuteIndex >= 0) {
-			minuteListRef.current?.scrollTo({ y: minuteIndex * ITEM_HEIGHT, animated: false });
+			minuteListRef.current?.scrollTo({ y: (minuteIndex + minuteOptions.length) * ITEM_HEIGHT, animated: false });
 		}
 	}, [ITEM_HEIGHT, draftHour, draftMinute, hourOptions, minuteOptions, open]);
 
@@ -249,11 +267,11 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 								onMomentumScrollEnd={handleHourMomentumEnd}
 								showsVerticalScrollIndicator={false}
 							>
-								{hourOptions.map((hour) => (
+								{hourLoopOptions.map((hour, index) => (
 									<Pressable
-										key={hour}
+										key={`hour-${index}-${hour}`}
 										style={styles.pickerItem}
-										onPress={() => scrollToOption(hourListRef.current, hourOptions, hour, setDraftHour)}
+										onPress={() => scrollToOption(hourListRef.current, hourOptions, hourOptions.length, hour, setDraftHour)}
 									>
 										<Text style={[styles.pickerItemText, hour === draftHour && styles.activeText]}>
 											{String(hour).padStart(2, "0")}
@@ -274,11 +292,11 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 								onMomentumScrollEnd={handleMinuteMomentumEnd}
 								showsVerticalScrollIndicator={false}
 							>
-								{minuteOptions.map((minute) => (
+								{minuteLoopOptions.map((minute, index) => (
 									<Pressable
-										key={`${draftHour}-${minute}`}
+										key={`${draftHour}-${index}-${minute}`}
 										style={styles.pickerItem}
-										onPress={() => scrollToOption(minuteListRef.current, minuteOptions, minute, setDraftMinute)}
+										onPress={() => scrollToOption(minuteListRef.current, minuteOptions, minuteOptions.length, minute, setDraftMinute)}
 									>
 										<Text style={[styles.pickerItemText, minute === draftMinute && styles.activeText]}>
 											{String(minute).padStart(2, "0")}

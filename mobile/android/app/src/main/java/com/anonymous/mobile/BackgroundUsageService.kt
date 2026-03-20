@@ -76,13 +76,17 @@ class BackgroundUsageService : Service(), SensorEventListener {
     override fun onReceive(context: Context?, intent: Intent?) {
       when (intent?.action) {
         Intent.ACTION_USER_PRESENT -> {
+          // 手机解锁 → 摸鱼状态
           lastActiveAt = System.currentTimeMillis()
-          evaluateAndPersistState()
+          updateState(1)
         }
         Intent.ACTION_SCREEN_OFF -> {
-          evaluateAndPersistState(forceInactive = true)
+          // 手机锁屏 → 停止摸鱼
+          updateState(0)
         }
         Intent.ACTION_SCREEN_ON -> {
+          // 屏幕打开，使用陀螺仪辅助判断
+          lastActiveAt = System.currentTimeMillis()
           evaluateAndPersistState()
         }
       }
@@ -164,14 +168,28 @@ class BackgroundUsageService : Service(), SensorEventListener {
     val now = System.currentTimeMillis()
     val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
     val isInteractive = powerManager.isInteractive
-    val isActive = !forceInactive && isInteractive && now - lastActiveAt <= ACTIVE_TIMEOUT_MS
-    val nextState = if (isActive) 1 else 0
+    val recentlyActive = now - lastActiveAt <= ACTIVE_TIMEOUT_MS
+    
+    // 屏幕打开 && 最近有陀螺仪活动 → 摸鱼状态 1
+    // 屏幕打开 || 最近无陀螺仪活动 → 停止摸鱼 0
+    val nextState = if (!forceInactive && isInteractive && recentlyActive) 1 else 0
 
     if (nextState == currentState) {
       return
     }
 
     currentState = nextState
+    getPrefs().edit().putInt(LAST_STATE_KEY, currentState).apply()
+    appendEvent(now, currentState)
+  }
+
+  private fun updateState(newState: Int) {
+    if (newState == currentState) {
+      return
+    }
+
+    val now = System.currentTimeMillis()
+    currentState = newState
     getPrefs().edit().putInt(LAST_STATE_KEY, currentState).apply()
     appendEvent(now, currentState)
   }
