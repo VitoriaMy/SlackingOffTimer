@@ -5,6 +5,7 @@ import { theme } from "@/core/theme";
 export default StyleSheet.create({
 	settingRow: {
 		gap: rs(14),
+		paddingBottom: rs(14),
 	},
 	rowHead: {
 		flexDirection: "row",

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+	FlatList,
+	Modal,
 	Pressable,
-	ScrollView,
 	Text,
 	View,
-    Modal,
+	type ListRenderItemInfo,
 	type NativeScrollEvent,
 	type NativeSyntheticEvent,
 	type StyleProp,
@@ -14,9 +15,9 @@ import { rs } from "@/core/responsive";
 import styles from "./index.style";
 
 interface TimerProps {
-	maxTime: string; // hh:mm
-	minTime: string; // hh:mm
-	value: string; // hh:mm
+	maxTime: string;
+	minTime: string;
+	value: string;
 	onChange: (newValue: string) => void;
 	style?: StyleProp<ViewStyle>;
 	className?: string;
@@ -69,6 +70,10 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 	const VISIBLE_ROWS = 5;
 	const PICKER_HEIGHT = ITEM_HEIGHT * VISIBLE_ROWS;
 	const PICKER_PADDING = (PICKER_HEIGHT - ITEM_HEIGHT) / 2;
+	const LOOP_REPEAT = 60;
+	const LOOP_CENTER = Math.floor(LOOP_REPEAT / 2);
+	const RECENTER_THRESHOLD_CYCLES = 8;
+	const WHEEL_DECELERATION_RATE = 0.989;
 
 	const [open, setOpen] = useState(false);
 
@@ -90,8 +95,8 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 	const [draftMinute, setDraftMinute] = useState(normalizedValue % 60);
 	const lastAutoNormalizedRef = useRef<string | null>(null);
 
-	const hourListRef = useRef<ScrollView | null>(null);
-	const minuteListRef = useRef<ScrollView | null>(null);
+	const hourListRef = useRef<FlatList<number> | null>(null);
+	const minuteListRef = useRef<FlatList<number> | null>(null);
 
 	const hourRange = useMemo(() => {
 		const minHour = Math.floor(range.lower / 60);
@@ -103,8 +108,11 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		() => Array.from({ length: hourRange.maxHour - hourRange.minHour + 1 }, (_, i) => hourRange.minHour + i),
 		[hourRange.maxHour, hourRange.minHour]
 	);
-
-	const hourLoopOptions = useMemo(() => [...hourOptions, ...hourOptions, ...hourOptions], [hourOptions]);
+	const shouldLoopHours = hourOptions.length >= 5;
+	const hourLoopOptions = useMemo(
+		() => (shouldLoopHours ? Array.from({ length: LOOP_REPEAT }, () => hourOptions).flat() : hourOptions),
+		[LOOP_REPEAT, hourOptions, shouldLoopHours]
+	);
 
 	const getMinuteRange = (hour: number) => {
 		const isLowerHour = hour === hourRange.minHour;
@@ -116,14 +124,20 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		};
 	};
 
-	const minuteRange = useMemo(() => getMinuteRange(draftHour), [draftHour, hourRange.maxHour, hourRange.minHour, range.lower, range.upper]);
+	const minuteRange = useMemo(
+		() => getMinuteRange(draftHour),
+		[draftHour, hourRange.maxHour, hourRange.minHour, range.lower, range.upper]
+	);
 
 	const minuteOptions = useMemo(
 		() => Array.from({ length: minuteRange.maxMinute - minuteRange.minMinute + 1 }, (_, i) => minuteRange.minMinute + i),
 		[minuteRange.maxMinute, minuteRange.minMinute]
 	);
-
-	const minuteLoopOptions = useMemo(() => [...minuteOptions, ...minuteOptions, ...minuteOptions], [minuteOptions]);
+	const shouldLoopMinutes = minuteOptions.length >= 5;
+	const minuteLoopOptions = useMemo(
+		() => (shouldLoopMinutes ? Array.from({ length: LOOP_REPEAT }, () => minuteOptions).flat() : minuteOptions),
+		[LOOP_REPEAT, minuteOptions, shouldLoopMinutes]
+	);
 
 	useEffect(() => {
 		if (value === normalizedText) {
@@ -182,8 +196,10 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		offsetY: number,
 		options: number[],
 		baseLength: number,
-		setValue: (v: number) => void,
-		scroller?: ScrollView | null
+		setValue: (nextValue: number) => void,
+		centerCycle: number,
+		recenterThresholdCycles: number,
+		scroller?: FlatList<number> | null
 	) => {
 		if (baseLength <= 0) {
 			return;
@@ -191,26 +207,48 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 
 		const index = clamp(Math.round(offsetY / ITEM_HEIGHT), 0, options.length - 1);
 		const normalizedIndex = index % baseLength;
-		const middleIndex = normalizedIndex + baseLength;
+		const middleIndex = normalizedIndex + baseLength * centerCycle;
+		const currentCycle = Math.floor(index / baseLength);
+		const shouldRecenter = Math.abs(currentCycle - centerCycle) >= recenterThresholdCycles;
 		const nextValue = options[normalizedIndex];
 		setValue(nextValue);
-		scroller?.scrollTo({ y: middleIndex * ITEM_HEIGHT, animated: false });
+
+		if (centerCycle > 0 && shouldRecenter) {
+			scroller?.scrollToOffset({ offset: middleIndex * ITEM_HEIGHT, animated: false });
+		}
 	};
 
 	const handleHourMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		snapToNearest(event.nativeEvent.contentOffset.y, hourLoopOptions, hourOptions.length, setDraftHour, hourListRef.current);
+		snapToNearest(
+			event.nativeEvent.contentOffset.y,
+			hourLoopOptions,
+			hourOptions.length,
+			setDraftHour,
+			shouldLoopHours ? LOOP_CENTER : 0,
+			RECENTER_THRESHOLD_CYCLES,
+			hourListRef.current
+		);
 	};
 
 	const handleMinuteMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-		snapToNearest(event.nativeEvent.contentOffset.y, minuteLoopOptions, minuteOptions.length, setDraftMinute, minuteListRef.current);
+		snapToNearest(
+			event.nativeEvent.contentOffset.y,
+			minuteLoopOptions,
+			minuteOptions.length,
+			setDraftMinute,
+			shouldLoopMinutes ? LOOP_CENTER : 0,
+			RECENTER_THRESHOLD_CYCLES,
+			minuteListRef.current
+		);
 	};
 
 	const scrollToOption = (
-		scroller: ScrollView | null,
+		scroller: FlatList<number> | null,
 		options: number[],
 		baseLength: number,
 		selectedValue: number,
-		setValue: (v: number) => void
+		centerCycle: number,
+		setValue: (nextValue: number) => void
 	) => {
 		if (baseLength <= 0) {
 			return;
@@ -221,8 +259,8 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 			return;
 		}
 
-		const middleIndex = index + baseLength;
-		scroller?.scrollTo({ y: middleIndex * ITEM_HEIGHT, animated: true });
+		const targetIndex = index + baseLength * centerCycle;
+		scroller?.scrollToOffset({ offset: targetIndex * ITEM_HEIGHT, animated: true });
 		setValue(selectedValue);
 	};
 
@@ -235,13 +273,45 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 		const minuteIndex = minuteOptions.indexOf(draftMinute);
 
 		if (hourIndex >= 0) {
-			hourListRef.current?.scrollTo({ y: (hourIndex + hourOptions.length) * ITEM_HEIGHT, animated: false });
+			hourListRef.current?.scrollToOffset({
+				offset: (hourIndex + hourOptions.length * (shouldLoopHours ? LOOP_CENTER : 0)) * ITEM_HEIGHT,
+				animated: false,
+			});
 		}
 
 		if (minuteIndex >= 0) {
-			minuteListRef.current?.scrollTo({ y: (minuteIndex + minuteOptions.length) * ITEM_HEIGHT, animated: false });
+			minuteListRef.current?.scrollToOffset({
+				offset: (minuteIndex + minuteOptions.length * (shouldLoopMinutes ? LOOP_CENTER : 0)) * ITEM_HEIGHT,
+				animated: false,
+			});
 		}
-	}, [ITEM_HEIGHT, draftHour, draftMinute, hourOptions, minuteOptions, open]);
+	}, [ITEM_HEIGHT, LOOP_CENTER, draftHour, draftMinute, hourOptions, minuteOptions, open, shouldLoopHours, shouldLoopMinutes]);
+
+	const renderHourItem = ({ item }: ListRenderItemInfo<number>) => (
+		<Pressable
+			style={styles.pickerItem}
+			onPress={() =>
+				scrollToOption(hourListRef.current, hourOptions, hourOptions.length, item, shouldLoopHours ? LOOP_CENTER : 0, setDraftHour)
+			}
+		>
+			<Text style={[styles.pickerItemText, item === draftHour && styles.activeText]}>
+				{String(item).padStart(2, "0")}
+			</Text>
+		</Pressable>
+	);
+
+	const renderMinuteItem = ({ item }: ListRenderItemInfo<number>) => (
+		<Pressable
+			style={styles.pickerItem}
+			onPress={() =>
+				scrollToOption(minuteListRef.current, minuteOptions, minuteOptions.length, item, shouldLoopMinutes ? LOOP_CENTER : 0, setDraftMinute)
+			}
+		>
+			<Text style={[styles.pickerItemText, item === draftMinute && styles.activeText]}>
+				{String(item).padStart(2, "0")}
+			</Text>
+		</Pressable>
+	);
 
 	return (
 		<>
@@ -256,57 +326,49 @@ export function Timer({ maxTime, minTime, value, onChange, style }: TimerProps) 
 							<View style={styles.panel}>
 								<Text style={styles.preview}>{formatHHMM(draftValue)}</Text>
 								<View style={styles.pickers}>
-						<View style={styles.pickerColumn}>
-							<Text style={styles.pickerTitle}>时</Text>
-							<ScrollView
-								ref={hourListRef}
-								style={styles.pickerList}
-								contentContainerStyle={{ paddingVertical: PICKER_PADDING }}
-								snapToInterval={ITEM_HEIGHT}
-								decelerationRate="fast"
-								onMomentumScrollEnd={handleHourMomentumEnd}
-								showsVerticalScrollIndicator={false}
-							>
-								{hourLoopOptions.map((hour, index) => (
-									<Pressable
-										key={`hour-${index}-${hour}`}
-										style={styles.pickerItem}
-										onPress={() => scrollToOption(hourListRef.current, hourOptions, hourOptions.length, hour, setDraftHour)}
-									>
-										<Text style={[styles.pickerItemText, hour === draftHour && styles.activeText]}>
-											{String(hour).padStart(2, "0")}
-										</Text>
-									</Pressable>
-								))}
-							</ScrollView>
-						</View>
+									<View style={styles.pickerColumn}>
+										<Text style={styles.pickerTitle}>时</Text>
+										<FlatList
+											ref={hourListRef}
+											style={styles.pickerList}
+											data={hourLoopOptions}
+											renderItem={renderHourItem}
+											keyExtractor={(_, index) => `hour-${index}`}
+											contentContainerStyle={{ paddingVertical: PICKER_PADDING }}
+											getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
+											initialNumToRender={VISIBLE_ROWS + 4}
+											maxToRenderPerBatch={VISIBLE_ROWS + 8}
+											windowSize={9}
+											removeClippedSubviews
+											snapToInterval={ITEM_HEIGHT}
+											decelerationRate={WHEEL_DECELERATION_RATE}
+											onMomentumScrollEnd={handleHourMomentumEnd}
+											showsVerticalScrollIndicator={false}
+										/>
+									</View>
 
-						<View style={styles.pickerColumn}>
-							<Text style={styles.pickerTitle}>分</Text>
-							<ScrollView
-								ref={minuteListRef}
-								style={styles.pickerList}
-								contentContainerStyle={{ paddingVertical: PICKER_PADDING }}
-								snapToInterval={ITEM_HEIGHT}
-								decelerationRate="fast"
-								onMomentumScrollEnd={handleMinuteMomentumEnd}
-								showsVerticalScrollIndicator={false}
-							>
-								{minuteLoopOptions.map((minute, index) => (
-									<Pressable
-										key={`${draftHour}-${index}-${minute}`}
-										style={styles.pickerItem}
-										onPress={() => scrollToOption(minuteListRef.current, minuteOptions, minuteOptions.length, minute, setDraftMinute)}
-									>
-										<Text style={[styles.pickerItemText, minute === draftMinute && styles.activeText]}>
-											{String(minute).padStart(2, "0")}
-										</Text>
-									</Pressable>
-								))}
-							</ScrollView>
-						</View>
+									<View style={styles.pickerColumn}>
+										<Text style={styles.pickerTitle}>分</Text>
+										<FlatList
+											ref={minuteListRef}
+											style={styles.pickerList}
+											data={minuteLoopOptions}
+											renderItem={renderMinuteItem}
+											keyExtractor={(_, index) => `minute-${draftHour}-${index}`}
+											contentContainerStyle={{ paddingVertical: PICKER_PADDING }}
+											getItemLayout={(_, index) => ({ length: ITEM_HEIGHT, offset: ITEM_HEIGHT * index, index })}
+											initialNumToRender={VISIBLE_ROWS + 4}
+											maxToRenderPerBatch={VISIBLE_ROWS + 8}
+											windowSize={9}
+											removeClippedSubviews
+											snapToInterval={ITEM_HEIGHT}
+											decelerationRate={WHEEL_DECELERATION_RATE}
+											onMomentumScrollEnd={handleMinuteMomentumEnd}
+											showsVerticalScrollIndicator={false}
+										/>
+									</View>
 
-							<View pointerEvents="none" style={styles.selectionFrame} />
+									<View pointerEvents="none" style={styles.selectionFrame} />
 								</View>
 								<Text style={styles.hint}>
 									{formatHHMM(range.lower)} - {formatHHMM(range.upper)}
