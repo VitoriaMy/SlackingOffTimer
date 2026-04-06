@@ -6,8 +6,8 @@ export default StyleSheet.create({
     position: "absolute",
     top: "46%",
     bottom: "28%",
-    left: "14%",
-    width: "72%",
+    left: "16%",
+    width: "66%",
   },
   stage_1: {
     bottom: "22%",
@@ -38,7 +38,7 @@ export default StyleSheet.create({
   waterDropInner: {
     position: "absolute",
     top: 0,
-    left: "24%",
+    left: "25%",
     width: "50%",
     aspectRatio: 1,
     transformOrigin: "top center",
@@ -50,7 +50,7 @@ export default StyleSheet.create({
     left: '50%',
     transformOrigin: "center",
     transform: [
-      { translateX: '-50.5%' },
+      { translateX: '-50%' },
       { translateY: '-14%' },
     ],
     width: "220%",

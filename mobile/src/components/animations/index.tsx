@@ -7,15 +7,12 @@ import { WaterAnimation } from "./water";
 import styles from "./index.style";
 
 export function Animations({
-  // isRunning = true,
-  // progress = 0,
+  isRunning = true,
+  progress = 0,
 }: {
   isRunning?: boolean;
   progress?: number;
 }) {
-
-  const isRunning = true;
-  let progress = 0;
 
   const stage = useMemo(() => {
     // 当前进度长度
