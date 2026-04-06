@@ -1,6 +1,11 @@
 package com.anonymous.mobile
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.PowerManager
+import android.provider.Settings
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -69,6 +74,56 @@ class BackgroundUsageModule(private val context: ReactApplicationContext) : Reac
       promise.resolve(result)
     } catch (error: Throwable) {
       promise.reject("BG_USAGE_CONSUME_FAILED", error)
+    }
+  }
+
+  @ReactMethod
+  fun isIgnoringBatteryOptimizations(promise: Promise) {
+    try {
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        promise.resolve(true)
+        return
+      }
+
+      val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+      promise.resolve(powerManager.isIgnoringBatteryOptimizations(context.packageName))
+    } catch (error: Throwable) {
+      promise.reject("BG_USAGE_BATTERY_STATUS_FAILED", error)
+    }
+  }
+
+  @ReactMethod
+  fun requestIgnoreBatteryOptimizations(promise: Promise) {
+    try {
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        promise.resolve(true)
+        return
+      }
+
+      val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+      if (powerManager.isIgnoringBatteryOptimizations(context.packageName)) {
+        promise.resolve(true)
+        return
+      }
+
+      val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+        data = Uri.parse("package:${context.packageName}")
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+      }
+
+      context.startActivity(intent)
+
+      promise.resolve(false)
+    } catch (_: Throwable) {
+      try {
+        val fallbackIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+          addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(fallbackIntent)
+        promise.resolve(false)
+      } catch (error: Throwable) {
+        promise.reject("BG_USAGE_BATTERY_REQUEST_FAILED", error)
+      }
     }
   }
 }

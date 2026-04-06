@@ -50,7 +50,7 @@ export default StyleSheet.create({
     left: '50%',
     transformOrigin: "center",
     transform: [
-      { translateX: '-50%' },
+      { translateX: '-50.5%' },
       { translateY: '-14%' },
     ],
     width: "220%",

@@ -1,3 +1,5 @@
+export type SlackingDetectionMethod = "gyroscope" | "screenUsage" | "deviceStatus";
+
 export type WorkSchedule = {
   workDays: number[];
   startTime: string;
@@ -6,6 +8,8 @@ export type WorkSchedule = {
   lunchEnd?: string;
   holidays?: string[];
   dayOverrides?: Record<string, "work" | "rest">;
+  // 摸鱼检测方式配置（默认全部启用）
+  slackingDetectionMethods?: SlackingDetectionMethod[];
 };
 
 export type SlackSwitchState = 0 | 1;
@@ -30,4 +34,5 @@ export const defaultSchedule: WorkSchedule = {
   lunchEnd: "13:00",
   holidays: [],
   dayOverrides: {},
+  slackingDetectionMethods: ["gyroscope", "screenUsage", "deviceStatus"],
 };

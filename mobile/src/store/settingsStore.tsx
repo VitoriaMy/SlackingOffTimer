@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   keepRecent7DaysScheduleHistory,
   keepRecent7DaysRecords,
@@ -43,6 +43,16 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
   const [schedule, setSchedule] = useState<WorkSchedule>(() => normalizeSchedule(defaultSchedule));
   const [slackingRecords, setSlackingRecords] = useState<SlackingRecord[]>([]);
   const [scheduleHistory, setScheduleHistory] = useState<ScheduleHistoryRecord[]>([]);
+  const slackingRecordsRef = useRef<SlackingRecord[]>([]);
+  const scheduleHistoryRef = useRef<ScheduleHistoryRecord[]>([]);
+
+  useEffect(() => {
+    slackingRecordsRef.current = slackingRecords;
+  }, [slackingRecords]);
+
+  useEffect(() => {
+    scheduleHistoryRef.current = scheduleHistory;
+  }, [scheduleHistory]);
 
   // Initialize store from AsyncStorage
   useEffect(() => {
@@ -87,12 +97,13 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
         savedAt: Date.now(),
         schedule: normalized,
       };
-      const newHistory = [...scheduleHistory, newHistoryRecord];
+      const newHistory = [...scheduleHistoryRef.current, newHistoryRecord];
       const keptHistory = keepRecent7DaysScheduleHistory(newHistory);
+      scheduleHistoryRef.current = keptHistory;
       setScheduleHistory(keptHistory);
       await saveScheduleHistory(keptHistory);
     },
-    [scheduleHistory],
+    [],
   );
 
   const updateConfigured = useCallback(async (next: boolean) => {
@@ -106,12 +117,13 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
         timestamp: Date.now(),
         switchState,
       };
-      const newRecords = [...slackingRecords, newRecord];
+      const newRecords = [...slackingRecordsRef.current, newRecord];
       const keptRecords = keepRecent7DaysRecords(newRecords);
+      slackingRecordsRef.current = keptRecords;
       setSlackingRecords(keptRecords);
       await saveSlackingRecords(keptRecords);
     },
-    [slackingRecords],
+    [],
   );
 
   const appendSlackingRecords = useCallback(
@@ -130,11 +142,12 @@ export function SettingsStoreProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const merged = keepRecent7DaysRecords([...slackingRecords, ...valid]);
+      const merged = keepRecent7DaysRecords([...slackingRecordsRef.current, ...valid]);
+      slackingRecordsRef.current = merged;
       setSlackingRecords(merged);
       await saveSlackingRecords(merged);
     },
-    [slackingRecords],
+    [],
   );
 
   const reloadSlackingRecords = useCallback(async () => {

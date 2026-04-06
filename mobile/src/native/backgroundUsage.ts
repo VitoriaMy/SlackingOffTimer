@@ -14,3 +14,11 @@ export async function stopBackgroundUsageMonitoring(): Promise<void> {
 export async function consumeBackgroundUsageEvents(): Promise<BackgroundUsageEvent[]> {
   return [];
 }
+
+export async function isIgnoringBatteryOptimizations(): Promise<boolean> {
+  return true;
+}
+
+export async function requestIgnoreBatteryOptimizations(): Promise<boolean> {
+  return true;
+}

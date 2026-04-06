@@ -5,8 +5,8 @@ export default StyleSheet.create({
   water: {
     position: "relative",
     overflow: "hidden",
-    width: rs(240),
-    height: rs(400),
+    width: rs(216),
+    height: rs(384),
   },
 
   watterAnimation: {

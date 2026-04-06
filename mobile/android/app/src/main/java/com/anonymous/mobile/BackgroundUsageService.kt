@@ -31,8 +31,8 @@ class BackgroundUsageService : Service(), SensorEventListener {
     private const val EVENTS_KEY = "events"
     private const val LAST_STATE_KEY = "last_state"
 
-    private const val EVALUATE_INTERVAL_MS = 5000L
-    private const val ACTIVE_TIMEOUT_MS = 20000L
+    private const val EVALUATE_INTERVAL_MS = 2000L
+    private const val ACTIVE_TIMEOUT_MS = 5000L
     private const val GYRO_ACTIVITY_THRESHOLD = 0.12f
 
     const val ACTION_START = "com.anonymous.mobile.BG_USAGE_START"
@@ -169,10 +169,12 @@ class BackgroundUsageService : Service(), SensorEventListener {
     val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
     val isInteractive = powerManager.isInteractive
     val recentlyActive = now - lastActiveAt <= ACTIVE_TIMEOUT_MS
-    
-    // 屏幕打开 && 最近有陀螺仪活动 → 摸鱼状态 1
-    // 屏幕打开 || 最近无陀螺仪活动 → 停止摸鱼 0
-    val nextState = if (!forceInactive && isInteractive && recentlyActive) 1 else 0
+
+    // 任意一项满足即判定为摸鱼：
+    // 1. 设备最近有陀螺仪活动
+    // 2. 设备当前处于解锁/可交互状态
+    // 3. 屏幕近期有使用行为
+    val nextState = if (!forceInactive && (isInteractive || recentlyActive)) 1 else 0
 
     if (nextState == currentState) {
       return
